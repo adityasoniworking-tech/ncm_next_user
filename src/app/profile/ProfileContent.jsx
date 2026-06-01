@@ -53,7 +53,15 @@ export default function ProfileContent() {
                     ...data,
                     displayName: data.displayName || currentUser.displayName || '',
                     shippingName: data.shippingName || data.name || currentUser.displayName || '', 
-                    email: data.email || currentUser.email || ''
+                    email: data.email || currentUser.email || '',
+                    phone: data.phone || '',
+                    street: data.street || '',
+                    city: data.city || '',
+                    taluka: data.taluka || '',
+                    district: data.district || '',
+                    state: data.state || '',
+                    pincode: data.pincode || '',
+                    landmark: data.landmark || ''
                 });
             } else {
                 setProfileData(prev => ({
@@ -98,6 +106,13 @@ export default function ProfileContent() {
 
     const handleSaveShippingDetails = async (e) => {
         if (e) e.preventDefault();
+        
+        const phoneRegex = /^[0-9]{10}$/;
+        if (profileData.phone && !phoneRegex.test(profileData.phone.replace(/\s/g, ''))) {
+            alert('Please enter a valid 10-digit phone number');
+            return;
+        }
+
         if (!user) return;
         setSaving(true);
         try {

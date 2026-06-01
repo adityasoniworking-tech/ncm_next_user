@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import FoundersSection from './FoundersSection';
 
 export const metadata = {
     title: "Our Story & Mission | NuttyChocoMorsels",
@@ -56,28 +57,7 @@ export default function About() {
             </section>
 
             {/* Founders Section */}
-            <section className="about-section">
-                <h2 className="section-title">Meet the Visionaries</h2>
-                <div className="founders-grid">
-                    <div className="founder-card">
-                        <div className="founder-img-wrapper">
-                            <img src="/assets/images/shrikant.jpg" alt="Shrikant Limbachiya" className="founder-img" />
-                        </div>
-                        <h3 className="founder-name">Shrikant Limbachiya</h3>
-                        <p className="founder-role">Co-Founder & Head Chef</p>
-                        <p className="founder-desc">Shrikant leads our culinary innovation, bringing years of expertise to every recipe. He ensures that every product leaving our kitchen meets the "luxury" standard we promise.</p>
-                    </div>
-
-                    <div className="founder-card">
-                        <div className="founder-img-wrapper">
-                            <img src="/assets/images/mihir.jpg" alt="Mihirkumar Patel" className="founder-img" />
-                        </div>
-                        <h3 className="founder-name">Mihirkumar Patel</h3>
-                        <p className="founder-role">Co-Founder & Business Head</p>
-                        <p className="founder-desc">Mihirkumar is the driving force behind our operations and strategy. His vision is to make NCM the most loved bakery destination in the region through exceptional service.</p>
-                    </div>
-                </div>
-            </section>
+            <FoundersSection />
 
             {/* CTA Section */}
             <section className="cta-section">

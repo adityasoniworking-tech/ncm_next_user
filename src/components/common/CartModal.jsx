@@ -225,7 +225,7 @@ const CartModal = ({ isOpen, onClose }) => {
                 <button
                     onClick={() => {
                         if (!auth.currentUser) {
-                            alert('Order place karne ke liye kripya pehle login karein!');
+                            alert('Please login first to place an order!');
                             window.dispatchEvent(new Event('openAuthModal'));
                             return;
                         }
@@ -418,6 +418,12 @@ const CartModal = ({ isOpen, onClose }) => {
                     
                     if (!custName || !custPhone) {
                         alert('Please enter your name and phone number');
+                        return;
+                    }
+
+                    const phoneRegex = /^[0-9]{10}$/;
+                    if (!phoneRegex.test(custPhone.replace(/\s/g, ''))) {
+                        alert('Please enter a valid 10-digit phone number');
                         return;
                     }
                     if (deliveryType === 'Home Delivery') {
