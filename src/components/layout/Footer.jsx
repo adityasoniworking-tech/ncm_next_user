@@ -42,7 +42,7 @@ const Footer = () => {
                         <h3>Contact Info</h3>
                         <p><i className="fa-solid fa-phone"></i> +91 9978744573</p>
                         <p><i className="fa-solid fa-envelope"></i> thenuttychocomorsels@gmail.com</p>
-                        <p><i className="fa-solid fa-location-dot"></i> Swarnim Park, Gandhinagar, 382016</p>
+                        <p><i className="fa-solid fa-location-dot"></i> Swagat Afford, Sargasan, Gandhinagar</p>
                     </div>
                 </div>
             </div>
