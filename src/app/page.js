@@ -1,13 +1,29 @@
-import React from "react";
+'use client';
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { CheckBadgeIcon, SparklesIcon, TruckIcon, HeartIcon } from "@heroicons/react/24/solid";
+import { db } from "../services/firebase";
+import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
 
-export const metadata = {
-  title: "NuttyChocoMorsels | Premium 100% Eggless Bakery in Gandhinagar",
-  description:
-    "Welcome to NuttyChocoMorsels - Gandhinagar's finest 100% eggless artisanal bakery. Shop our premium collection of handmade chocolates, brownies, cookies, and more.",
-};
+// Note: metadata cannot be exported from a Client Component in Next.js directly like this. 
+// However, since this is a simple port to use client, we will move metadata to a layout if needed, 
+// or simply keep it simple and omit it for the client component (Next.js 13+ requires it in layout or a server component).
+// To avoid breaking the build, we remove the metadata export here and assume layout.js handles generic metadata.
 
 export default function Home() {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const q = query(collection(db, 'homeCategories'), orderBy('pos'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const items = snapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
+      setCategories(items);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
   return (
     <div className="home-page-wrapper">
       {/* HERO SECTION */}
@@ -57,7 +73,7 @@ export default function Home() {
               background: "white",
             }}
           >
-            <i className="fa-solid fa-leaf"></i>
+            <CheckBadgeIcon style={{ width: '40px', height: '40px', color: '#5D2E17', marginBottom: '15px', display: 'inline-block' }} />
             <h3>100% Eggless</h3>
             <p>Pure vegetarian treats baked to perfection.</p>
           </div>
@@ -70,7 +86,7 @@ export default function Home() {
               background: "white",
             }}
           >
-            <i className="fa-solid fa-cookie-bite"></i>
+            <SparklesIcon style={{ width: '40px', height: '40px', color: '#5D2E17', marginBottom: '15px', display: 'inline-block' }} />
             <h3>Premium Quality</h3>
             <p>Made from Premium quality chocolate & handpicked nuts.</p>
           </div>
@@ -83,7 +99,7 @@ export default function Home() {
               background: "white",
             }}
           >
-            <i className="fa-solid fa-truck-fast"></i>
+            <TruckIcon style={{ width: '40px', height: '40px', color: '#5D2E17', marginBottom: '15px', display: 'inline-block' }} />
             <h3>Freshly Baked</h3>
             <p>Oven-fresh goodness , delivered to your doorstep.</p>
           </div>
@@ -96,7 +112,7 @@ export default function Home() {
               background: "white",
             }}
           >
-            <i className="fa-solid fa-heart"></i>
+            <HeartIcon style={{ width: '40px', height: '40px', color: '#5D2E17', marginBottom: '15px', display: 'inline-block' }} />
             <h3>Made with Love</h3>
             <p>Crafted by passion, served with sweetness.</p>
           </div>
@@ -108,56 +124,28 @@ export default function Home() {
         Explore Our Menu
       </h2>
       <div className="grid" style={{ paddingTop: "10px" }}>
-        <div className="cat-card">
-          <Link href="/menu?cat=brownie" style={{ textDecoration: "none" }}>
-            <img
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSdBW4W-3x_osH5jYgOQR69xyqjhHjE2xH1Ag&s"
-              className="cat-img"
-              alt="Brownies"
-            />
-            <div className="cat-title">Brownies</div>
-          </Link>
-        </div>
-        <div className="cat-card">
-          <Link href="/menu?cat=cookie" style={{ textDecoration: "none" }}>
-            <img
-              src="https://media.istockphoto.com/id/187957173/photo/chocolate-chip-cookies-on-linen-napkin-wooden-table.jpg?s=2048x2048&w=is&k=20&c=n35CcgX1M2HUCH0VfSfZ-BqCQtTrswi3MuhPhTVWiJc="
-              className="cat-img"
-              alt="Cookies"
-            />
-            <div className="cat-title">Cookies</div>
-          </Link>
-        </div>
-        <div className="cat-card">
-          <Link href="/menu?cat=cheesecake" style={{ textDecoration: "none" }}>
-            <img
-              src="https://ik.imagekit.io/auwbv7fp3/cheezcake.png"
-              className="cat-img"
-              alt="Cheesecakes"
-            />
-            <div className="cat-title">Cheesecakes</div>
-          </Link>
-        </div>
-        <div className="cat-card">
-          <Link href="/menu?cat=muffin" style={{ textDecoration: "none" }}>
-            <img
-              src="https://www.allrecipes.com/thmb/i9KCEbxUGQ1Sa4F7Gts7SGBOpoM=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/157877-vanilla-cupcakes-ddmfs-4X3-0397-59653731be1d4769969698e427d7f5bc.jpg"
-              className="cat-img"
-              alt="Muffins & Cupcakes"
-            />
-            <div className="cat-title">Muffins & Cupcakes</div>
-          </Link>
-        </div>
-        <div className="cat-card">
-          <Link href="/menu?cat=chocolate" style={{ textDecoration: "none" }}>
-            <img
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTjhFzo66ZKUtklpwPn5glVmIzXez9gSOkvbg&s"
-              className="cat-img"
-              alt="Dubai Viral Chocolates"
-            />
-            <div className="cat-title">Dubai Viral Chocolates</div>
-          </Link>
-        </div>
+        {loading ? (
+          <div style={{ textAlign: 'center', width: '100%', padding: '40px', color: '#5D2E17' }}>
+             Loading categories...
+          </div>
+        ) : categories.length === 0 ? (
+          <div style={{ textAlign: 'center', width: '100%', padding: '40px', color: '#5D2E17' }}>
+             No categories available at the moment.
+          </div>
+        ) : (
+          categories.map((cat) => (
+            <div className="cat-card" key={cat.docId}>
+              <Link href={`/menu?cat=${cat.slug}`} style={{ textDecoration: "none" }}>
+                <img
+                  src={cat.image}
+                  className="cat-img"
+                  alt={cat.name}
+                />
+                <div className="cat-title">{cat.name}</div>
+              </Link>
+            </div>
+          ))
+        )}
       </div>
 
       {/* FOOTER PUSH - To ensure spacing before footer layout */}

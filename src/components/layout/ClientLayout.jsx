@@ -12,6 +12,7 @@ import SuccessModal from '../common/SuccessModal';
 import LogoutModal from '../common/LogoutModal';
 import PWAUpdater from '../common/PWAUpdater';
 import { useCart } from '../../context/CartContext';
+import { ShoppingCartIcon } from '@heroicons/react/24/solid';
 // Note: PWA Updater and Install Prompt might need specific Next.js implementation
 // For now we'll keep them as placeholders or import if migrated
 
@@ -97,7 +98,9 @@ export default function ClientLayout({ children }) {
                 id="cartBtnFloating"
                 onClick={() => setIsCartModalOpen(true)}
             >
-                <i className="fa-solid fa-cart-shopping"></i>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                    <ShoppingCartIcon style={{ width: '32px', height: '32px' }} />
+                </div>
                 <span id="cart-count" style={{ display: cartCount > 0 ? 'flex' : 'none' }}>
                     {cartCount}
                 </span>

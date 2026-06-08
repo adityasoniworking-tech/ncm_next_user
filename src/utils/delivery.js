@@ -6,7 +6,7 @@ export const SHOP_LOCATION = [
 
 export const DELIVERY_CONFIG = {
     firstKmFree: true,
-    chargePer500m: 10,
+    chargePerIncrement: 5,
     minChargeDistance: 1.0,
     incrementDistance: 0.5
 };

@@ -4,6 +4,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useCart } from '../../context/CartContext';
 import { auth } from '../../services/firebase';
+import { 
+    ShoppingCartIcon, 
+    ArrowRightIcon, 
+    ArrowLeftIcon, 
+    CheckCircleIcon, 
+    GiftIcon, 
+    BuildingStorefrontIcon, 
+    HomeIcon,
+    ArrowPathIcon 
+} from '@heroicons/react/24/solid';
 import { SHOP_LOCATION, DELIVERY_CONFIG, calculateDistance } from '../../utils/delivery';
 
 const DeliveryMap = dynamic(() => import('./DeliveryMap'), { 
@@ -138,48 +148,59 @@ const CartModal = ({ isOpen, onClose }) => {
         }
 
         setGeolocationLoading(true);
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                const dist = calculateDistance(SHOP_LOCATION[0], SHOP_LOCATION[1], lat, lng);
-                let charge = 0;
-                if (dist > DELIVERY_CONFIG.minChargeDistance) {
-                    const chargeableDistance = dist - DELIVERY_CONFIG.minChargeDistance;
-                    const increments = Math.ceil(chargeableDistance / DELIVERY_CONFIG.incrementDistance);
-                    charge = increments * DELIVERY_CONFIG.chargePer500m;
-                }
+        const successCallback = async (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const dist = calculateDistance(SHOP_LOCATION[0], SHOP_LOCATION[1], lat, lng);
+            let charge = 0;
+            if (dist > DELIVERY_CONFIG.minChargeDistance) {
+                const chargeableDistance = dist - DELIVERY_CONFIG.minChargeDistance;
+                const increments = Math.ceil(chargeableDistance / DELIVERY_CONFIG.incrementDistance);
+                charge = increments * DELIVERY_CONFIG.chargePerIncrement;
+            }
 
-                try {
-                    const response = await fetch(`https://photon.komoot.io/reverse?lon=${lng}&lat=${lat}`);
-                    if (!response.ok) throw new Error('Geocoding request failed');
-                    const data = await response.json();
-                    let formatted = 'Location Selected';
-                    if (data.features && data.features.length > 0) {
-                        const props = data.features[0].properties;
-                        const parts = [
-                            props.name,
-                            props.street ? (props.street + (props.housenumber ? ' ' + props.housenumber : '')) : null,
-                            props.city || props.town || props.village,
-                            props.state,
-                            props.postcode
-                        ].filter(Boolean);
-                        formatted = [...new Set(parts)].join(', ');
-                    }
-                    handleLocationConfirm({ lat, lng, distance: dist, deliveryCharge: charge, formattedAddress: formatted });
-                } catch (error) {
-                    console.error('Direct locate error:', error);
-                    handleLocationConfirm({ lat, lng, distance: dist, deliveryCharge: charge, formattedAddress: 'Address not found' });
-                } finally {
-                    setGeolocationLoading(false);
+            try {
+                const response = await fetch(`https://photon.komoot.io/reverse?lon=${lng}&lat=${lat}`);
+                if (!response.ok) throw new Error('Geocoding request failed');
+                const data = await response.json();
+                let formatted = 'Location Selected';
+                if (data.features && data.features.length > 0) {
+                    const props = data.features[0].properties;
+                    const parts = [
+                        props.name,
+                        props.street ? (props.street + (props.housenumber ? ' ' + props.housenumber : '')) : null,
+                        props.city || props.town || props.village,
+                        props.state,
+                        props.postcode
+                    ].filter(Boolean);
+                    formatted = [...new Set(parts)].join(', ');
                 }
-            },
-            (error) => {
-                console.error('Geolocation error:', error);
-                alert('Unable to get your location. Please ensure location services are enabled.');
+                handleLocationConfirm({ lat, lng, distance: dist, deliveryCharge: charge, formattedAddress: formatted });
+            } catch (error) {
+                console.error('Direct locate error:', error);
+                handleLocationConfirm({ lat, lng, distance: dist, deliveryCharge: charge, formattedAddress: 'Address not found' });
+            } finally {
                 setGeolocationLoading(false);
+            }
+        };
+
+        const errorCallback = (error) => {
+            console.error('Geolocation error:', error);
+            alert('Unable to get your location. Please ensure location services are enabled.');
+            setGeolocationLoading(false);
+        };
+
+        navigator.geolocation.getCurrentPosition(
+            successCallback,
+            (err) => {
+                console.warn('High accuracy failed, trying low accuracy...', err);
+                navigator.geolocation.getCurrentPosition(
+                    successCallback,
+                    errorCallback,
+                    { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 }
+                );
             },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
         );
     };
 
@@ -187,7 +208,9 @@ const CartModal = ({ isOpen, onClose }) => {
 
     const EmptyCartState = () => (
         <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '20px', color: '#eee' }}>🛒</div>
+            <div style={{ marginBottom: '20px', color: '#ccc', display: 'flex', justifyContent: 'center' }}>
+                <ShoppingCartIcon style={{ width: '48px', height: '48px' }} />
+            </div>
             <h3 style={{ color: '#6b0f1a', marginBottom: '10px' }}>Your Basket is Empty</h3>
             <p style={{ color: '#999', marginBottom: '20px' }}>Looks like you haven't added any sweet treats yet.</p>
             <button onClick={onClose} style={{ background: 'white', border: '1px solid #6b0f1a', color: '#6b0f1a', padding: '10px 20px', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer', transition: '0.3s' }}>
@@ -233,7 +256,7 @@ const CartModal = ({ isOpen, onClose }) => {
                     }}
                     style={{ width: '100%', background: '#6b0f1a', color: 'white', padding: '15px', border: 'none', borderRadius: '10px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}
                 >
-                    Proceed to Checkout <i className="fa-solid fa-arrow-right"></i>
+                    Proceed to Checkout <ArrowRightIcon style={{ width: '20px', height: '20px' }} />
                 </button>
             </div>
         </>
@@ -243,7 +266,7 @@ const CartModal = ({ isOpen, onClose }) => {
         <div>
             <div style={{ marginBottom: '20px' }}>
                 <button onClick={() => setStep(1)} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '5px', padding: 0 }}>
-                    <i className="fa-solid fa-arrow-left"></i> Back to Cart
+                    <ArrowLeftIcon style={{ width: '16px', height: '16px' }} /> Back to Cart
                 </button>
             </div>
 
@@ -254,13 +277,17 @@ const CartModal = ({ isOpen, onClose }) => {
                     {(storeSettings?.showPickup ?? true) && (
                         <label style={{ ...styles.deliveryRadio, background: deliveryType === 'Self Pickup' ? '#fff0f0' : '#fff', borderColor: deliveryType === 'Self Pickup' ? '#6b0f1a' : '#ddd' }}>
                             <input type="radio" value="Self Pickup" checked={deliveryType === 'Self Pickup'} onChange={(e) => setDeliveryType(e.target.value)} style={{ accentColor: '#6b0f1a' }} />
-                            <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>🏬 Pickup</span>
+                            <span style={{ fontWeight: 'bold', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <BuildingStorefrontIcon style={{ width: '18px', height: '18px' }} /> Pickup
+                            </span>
                         </label>
                     )}
                     {(storeSettings?.showHomeDelivery ?? true) && (
                         <label style={{ ...styles.deliveryRadio, background: deliveryType === 'Home Delivery' ? '#f0f8ff' : '#fff', borderColor: deliveryType === 'Home Delivery' ? '#007bff' : '#ddd' }}>
                             <input type="radio" value="Home Delivery" checked={deliveryType === 'Home Delivery'} onChange={(e) => setDeliveryType(e.target.value)} style={{ accentColor: '#007bff' }} />
-                            <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>🏠 Delivery</span>
+                            <span style={{ fontWeight: 'bold', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <HomeIcon style={{ width: '18px', height: '18px' }} /> Delivery
+                            </span>
                         </label>
                     )}
                 </div>
@@ -359,7 +386,9 @@ const CartModal = ({ isOpen, onClose }) => {
             {availableReward && (
                 <div style={{ background: '#e8f5e9', padding: '15px', borderRadius: '10px', marginBottom: '15px', border: '1px solid #c8e6c9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div>
-                        <h4 style={{ margin: '0 0 5px 0', color: '#2e7d32', fontSize: '0.9rem' }}><i className="fa-solid fa-gift"></i> Loyalty Reward Available!</h4>
+                        <h4 style={{ margin: '0 0 5px 0', color: '#2e7d32', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <GiftIcon style={{ width: '16px', height: '16px' }} /> Loyalty Reward Available!
+                        </h4>
                         <p style={{ margin: 0, fontSize: '0.8rem', color: '#388e3c' }}>
                             You have a {availableReward.discountType === 'percentage' ? `${availableReward.discountAmount}%` : `₹${availableReward.discountAmount}`} discount reward!
                         </p>
@@ -389,7 +418,9 @@ const CartModal = ({ isOpen, onClose }) => {
                 )}
                 {applyReward && rewardDiscount > 0 && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                        <span style={{ color: '#2e7d32' }}><i className="fa-solid fa-gift"></i> Loyalty Discount</span>
+                        <span style={{ color: '#2e7d32', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <GiftIcon style={{ width: '16px', height: '16px' }} /> Loyalty Discount
+                        </span>
                         <span style={{ color: '#2e7d32', fontWeight: 'bold' }}>-₹{rewardDiscount.toFixed(2)}</span>
                     </div>
                 )}
@@ -421,15 +452,22 @@ const CartModal = ({ isOpen, onClose }) => {
                         return;
                     }
 
-                    const phoneRegex = /^[0-9]{10}$/;
+                    const phoneRegex = /^[6-9]\d{9}$/;
                     if (!phoneRegex.test(custPhone.replace(/\s/g, ''))) {
-                        alert('Please enter a valid 10-digit phone number');
+                        alert('Please enter a valid phone number');
                         return;
                     }
                     if (deliveryType === 'Home Delivery') {
-                        if (addressMode === 'manual' && (!street || !city || !pincode)) {
+                        if (addressMode === 'manual' && (!street || !city || !taluka || !district || !stateName || !pincode)) {
                             alert('Please enter your complete delivery address');
                             return;
+                        }
+                        if (addressMode === 'manual') {
+                            const pincodeRegex = /^[1-9][0-9]{5}$/;
+                            if (!pincodeRegex.test(pincode.replace(/\s/g, ''))) {
+                                alert('Please enter a valid 6-digit Indian Pincode');
+                                return;
+                            }
                         }
                         if (addressMode === 'saved' && (!savedProfile || !savedProfile.street || !savedProfile.city)) {
                             alert('Saved address is incomplete. Please enter manually.');
@@ -503,18 +541,22 @@ const CartModal = ({ isOpen, onClose }) => {
                         setIsPlacingOrder(false);
                     }
                 }}
-                disabled={isPlacingOrder || !agreedToTerms || !custName || !custPhone || (deliveryType === 'Home Delivery' && ((addressMode === 'manual' && !street) || (addressMode === 'saved' && !savedProfile?.street) || !selectedLocation))}
+                disabled={isPlacingOrder || !agreedToTerms || !custName || !custPhone || (deliveryType === 'Home Delivery' && ((addressMode === 'manual' && (!street || !city || !taluka || !district || !stateName || !pincode)) || (addressMode === 'saved' && !savedProfile?.street) || !selectedLocation))}
                 style={{
                     width: '100%', 
-                    background: (isPlacingOrder || !agreedToTerms || !custName || !custPhone || (deliveryType === 'Home Delivery' && ((addressMode === 'manual' && !street) || (addressMode === 'saved' && !savedProfile?.street) || !selectedLocation))) ? '#ccc' : '#6b0f1a',
+                    background: (isPlacingOrder || !agreedToTerms || !custName || !custPhone || (deliveryType === 'Home Delivery' && ((addressMode === 'manual' && (!street || !city || !taluka || !district || !stateName || !pincode)) || (addressMode === 'saved' && !savedProfile?.street) || !selectedLocation))) ? '#ccc' : '#6b0f1a',
                     color: 'white', padding: '15px', border: 'none', borderRadius: '10px', fontWeight: 'bold', fontSize: '1.1rem',
-                    cursor: (isPlacingOrder || !agreedToTerms || !custName || !custPhone || (deliveryType === 'Home Delivery' && ((addressMode === 'manual' && !street) || (addressMode === 'saved' && !savedProfile?.street) || !selectedLocation))) ? 'not-allowed' : 'pointer'
+                    cursor: (isPlacingOrder || !agreedToTerms || !custName || !custPhone || (deliveryType === 'Home Delivery' && ((addressMode === 'manual' && (!street || !city || !taluka || !district || !stateName || !pincode)) || (addressMode === 'saved' && !savedProfile?.street) || !selectedLocation))) ? 'not-allowed' : 'pointer'
                 }}
             >
                 {isPlacingOrder ? (
-                    <><i className="fa-solid fa-spinner fa-spin"></i> Processing...</>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <ArrowPathIcon style={{ width: '20px', height: '20px', animation: 'spin 1s linear infinite' }} /> Processing...
+                    </span>
                 ) : (
-                    <>Confirm Order (COD) <i className="fa-solid fa-check-circle"></i></>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        Confirm Order (COD) <CheckCircleIcon style={{ width: '20px', height: '20px' }} />
+                    </span>
                 )}
             </button>
         </div>
