@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { MapPinIcon, ArrowPathIcon } from '@heroicons/react/24/solid';
 
 // Fix typical Leaflet icon issue with webpack/vite
 if (typeof window !== 'undefined') {
@@ -122,7 +123,7 @@ const DeliveryMap = ({ onConfirm, onClose, initialLocation }) => {
         if (dist > DELIVERY_CONFIG.minChargeDistance) {
             const chargeableDistance = dist - DELIVERY_CONFIG.minChargeDistance;
             const increments = Math.ceil(chargeableDistance / DELIVERY_CONFIG.incrementDistance);
-            charge = increments * DELIVERY_CONFIG.chargePer500m;
+            charge = increments * DELIVERY_CONFIG.chargePerIncrement;
         }
         setDistance(dist);
         setDeliveryCharge(charge);
@@ -149,20 +150,31 @@ const DeliveryMap = ({ onConfirm, onClose, initialLocation }) => {
             return;
         }
         setGeolocationLoading(true);
+        const successCallback = (position) => {
+            const { latitude, longitude } = position.coords;
+            setMapCenter([latitude, longitude]);
+            setZoom(16);
+            processLocationChange(latitude, longitude);
+            setGeolocationLoading(false);
+        };
+
+        const errorCallback = (error) => {
+            console.error('Geolocation error:', error);
+            alert('Unable to get your location. Please ensure location services are enabled.');
+            setGeolocationLoading(false);
+        };
+
         navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const { latitude, longitude } = position.coords;
-                setMapCenter([latitude, longitude]);
-                setZoom(16);
-                processLocationChange(latitude, longitude);
-                setGeolocationLoading(false);
+            successCallback,
+            (err) => {
+                console.warn('High accuracy failed, trying low accuracy...', err);
+                navigator.geolocation.getCurrentPosition(
+                    successCallback,
+                    errorCallback,
+                    { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 }
+                );
             },
-            (error) => {
-                console.error('Geolocation error:', error);
-                alert('Unable to get your location. Please ensure location services are enabled.');
-                setGeolocationLoading(false);
-            },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
         );
     };
 
@@ -272,7 +284,11 @@ const DeliveryMap = ({ onConfirm, onClose, initialLocation }) => {
                         )}
                     </div>
                     <button onClick={getMyLocation} disabled={geolocationLoading} style={styles.gpsBtn}>
-                        <i className={geolocationLoading ? "fa-solid fa-spinner fa-spin" : "fa-solid fa-location-crosshairs"} style={{ marginRight: '8px' }}></i>
+                        {geolocationLoading ? (
+                            <ArrowPathIcon style={{ width: '18px', height: '18px', marginRight: '8px', animation: 'spin 1s linear infinite' }} />
+                        ) : (
+                            <MapPinIcon style={{ width: '18px', height: '18px', marginRight: '8px' }} />
+                        )}
                         {geolocationLoading ? 'Locating...' : 'Use My Current Location'}
                     </button>
                 </div>

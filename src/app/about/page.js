@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import FoundersSection from './FoundersSection';
+import { SparklesIcon, CheckBadgeIcon, LightBulbIcon, HeartIcon } from '@heroicons/react/24/solid';
 
 export const metadata = {
     title: "Our Story & Mission | NuttyChocoMorsels",
@@ -34,22 +35,22 @@ export default function About() {
                 <h2 className="section-title">Why Choose Us?</h2>
                 <div className="values-grid">
                     <div className="value-item">
-                        <i className="fas fa-gem value-icon"></i>
+                        <SparklesIcon style={{ width: '40px', height: '40px', color: '#c5a059', marginBottom: '15px' }} />
                         <h3>Luxury Quality</h3>
                         <p>We use only premium ingredients to ensure a world-class taste in every bite.</p>
                     </div>
                     <div className="value-item">
-                        <i className="fas fa-leaf value-icon"></i>
+                        <CheckBadgeIcon style={{ width: '40px', height: '40px', color: '#c5a059', marginBottom: '15px' }} />
                         <h3>Always Fresh</h3>
                         <p>Our products are baked fresh daily, ensuring the highest standards of freshness.</p>
                     </div>
                     <div className="value-item">
-                        <i className="fas fa-lightbulb value-icon"></i>
+                        <LightBulbIcon style={{ width: '40px', height: '40px', color: '#c5a059', marginBottom: '15px' }} />
                         <h3>Innovation</h3>
                         <p>From classic recipes to viral trends, we constantly innovate our menu.</p>
                     </div>
                     <div className="value-item">
-                        <i className="fas fa-heart value-icon"></i>
+                        <HeartIcon style={{ width: '40px', height: '40px', color: '#c5a059', marginBottom: '15px' }} />
                         <h3>Handcrafted</h3>
                         <p>Every delight is handcrafted with love and attention to detail.</p>
                     </div>

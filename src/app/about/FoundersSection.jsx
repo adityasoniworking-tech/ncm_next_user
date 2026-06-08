@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { XMarkIcon } from '@heroicons/react/24/solid';
 
 const founders = [
     {
@@ -60,7 +61,7 @@ export default function FoundersSection() {
                                 onClick={() => setSelectedFounder(null)}
                                 style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(0,0,0,0.05)', border: 'none', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#666', transition: '0.2s' }}
                             >
-                                <i className="fa-solid fa-xmark"></i>
+                                <XMarkIcon style={{ width: '20px', height: '20px' }} />
                             </button>
                             <div className="founder-img-wrapper" style={{ margin: '0 auto 20px', width: '120px', height: '120px' }}>
                                 <img src={selectedFounder.img} alt={selectedFounder.name} className="founder-img" />

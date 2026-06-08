@@ -5,7 +5,8 @@ import {
     GoogleAuthProvider, 
     createUserWithEmailAndPassword, 
     signInWithEmailAndPassword, 
-    updateProfile 
+    updateProfile,
+    sendPasswordResetEmail
 } from 'firebase/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -17,6 +18,8 @@ const AuthModal = ({ isOpen, onClose }) => {
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [isForgotPasswordMode, setIsForgotPasswordMode] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
 
     const handleEmailAuth = async (e) => {
         e.preventDefault();
@@ -54,6 +57,33 @@ const AuthModal = ({ isOpen, onClose }) => {
             if (err.code === 'auth/email-already-in-use') errorMessage = "Email is already in use.";
             if (err.code === 'auth/invalid-credential') errorMessage = "Invalid email or password.";
             if (err.code === 'auth/weak-password') errorMessage = "Password should be at least 6 characters.";
+            setError(errorMessage);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleResetPassword = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setError('');
+        setSuccessMessage('');
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            setError("Please enter a valid email address.");
+            setIsLoading(false);
+            return;
+        }
+
+        try {
+            await sendPasswordResetEmail(auth, email);
+            setSuccessMessage("Password reset email sent! Please check your inbox.");
+            setIsForgotPasswordMode(false);
+        } catch (err) {
+            console.error("Reset password error:", err);
+            let errorMessage = "Failed to send reset email. Please try again.";
+            if (err.code === 'auth/user-not-found') errorMessage = "No account found with this email.";
             setError(errorMessage);
         } finally {
             setIsLoading(false);
@@ -113,8 +143,22 @@ const AuthModal = ({ isOpen, onClose }) => {
                         </div>
 
                         <div style={styles.content}>
-                            <h2 style={styles.title}>{isSignUpMode ? 'Create an Account' : 'Welcome to nuttychocomorsels'}</h2>
-                            <p style={styles.subtitle}>{isSignUpMode ? 'Join us to enjoy exclusive treats & track orders.' : 'Log in to unlock exclusive treats & manage your orders.'}</p>
+                            <h2 style={styles.title}>
+                                {isForgotPasswordMode ? 'Reset Password' : (isSignUpMode ? 'Create an Account' : 'Welcome to nuttychocomorsels')}
+                            </h2>
+                            <p style={styles.subtitle}>
+                                {isForgotPasswordMode ? 'Enter your email to receive a password reset link.' : (isSignUpMode ? 'Join us to enjoy exclusive treats & track orders.' : 'Log in to unlock exclusive treats & manage your orders.')}
+                            </p>
+
+                            {successMessage && (
+                                <motion.div
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    style={styles.success}
+                                >
+                                    <i className="fa-solid fa-circle-check"></i> {successMessage}
+                                </motion.div>
+                            )}
 
                             {error && (
                                 <motion.div
@@ -126,8 +170,8 @@ const AuthModal = ({ isOpen, onClose }) => {
                                 </motion.div>
                             )}
 
-                            <form onSubmit={handleEmailAuth} style={styles.formContainer}>
-                                {isSignUpMode && (
+                            <form onSubmit={isForgotPasswordMode ? handleResetPassword : handleEmailAuth} style={styles.formContainer}>
+                                {isSignUpMode && !isForgotPasswordMode && (
                                     <input
                                         type="text"
                                         placeholder="Full Name"
@@ -145,23 +189,42 @@ const AuthModal = ({ isOpen, onClose }) => {
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
                                 />
-                                <div style={styles.passwordWrapper}>
-                                    <input
-                                        type={showPassword ? "text" : "password"}
-                                        placeholder="Password"
-                                        style={styles.input}
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        required
-                                    />
-                                    <button 
-                                        type="button" 
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        style={styles.eyeIcon}
-                                    >
-                                        <i className={showPassword ? "fa-solid fa-eye-slash" : "fa-solid fa-eye"}></i>
-                                    </button>
-                                </div>
+                                {!isForgotPasswordMode && (
+                                    <div style={styles.passwordWrapper}>
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder="Password"
+                                            style={styles.input}
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            required
+                                        />
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            style={styles.eyeIcon}
+                                        >
+                                            <i className={showPassword ? "fa-solid fa-eye-slash" : "fa-solid fa-eye"}></i>
+                                        </button>
+                                    </div>
+                                )}
+                                
+                                {!isSignUpMode && !isForgotPasswordMode && (
+                                    <div style={{ textAlign: 'right', marginTop: '-10px' }}>
+                                        <button 
+                                            type="button" 
+                                            onClick={() => {
+                                                setIsForgotPasswordMode(true);
+                                                setError('');
+                                                setSuccessMessage('');
+                                            }}
+                                            style={styles.forgotBtn}
+                                        >
+                                            Forgot Password?
+                                        </button>
+                                    </div>
+                                )}
+
                                 <motion.button
                                     type="submit"
                                     whileHover={{ scale: 1.02 }}
@@ -171,10 +234,10 @@ const AuthModal = ({ isOpen, onClose }) => {
                                 >
                                     {isLoading ? (
                                         <div style={styles.loader}>
-                                            <i className="fa-solid fa-spinner fa-spin"></i> {isSignUpMode ? 'Signing up...' : 'Signing in...'}
+                                            <i className="fa-solid fa-spinner fa-spin"></i> {isForgotPasswordMode ? 'Sending...' : (isSignUpMode ? 'Signing up...' : 'Signing in...')}
                                         </div>
                                     ) : (
-                                        isSignUpMode ? 'Sign Up' : 'Sign In'
+                                        isForgotPasswordMode ? 'Send Reset Link' : (isSignUpMode ? 'Sign Up' : 'Sign In')
                                     )}
                                 </motion.button>
                             </form>
@@ -199,12 +262,23 @@ const AuthModal = ({ isOpen, onClose }) => {
                                 Continue with Google
                             </motion.button>
 
-                            <p style={styles.toggleText} onClick={() => {
-                                setIsSignUpMode(!isSignUpMode);
-                                setError('');
-                            }}>
-                                {isSignUpMode ? 'Already have an account? Log in' : "Don't have an account? Sign up"}
-                            </p>
+                            {isForgotPasswordMode ? (
+                                <p style={styles.toggleText} onClick={() => {
+                                    setIsForgotPasswordMode(false);
+                                    setError('');
+                                    setSuccessMessage('');
+                                }}>
+                                    Back to Login
+                                </p>
+                            ) : (
+                                <p style={styles.toggleText} onClick={() => {
+                                    setIsSignUpMode(!isSignUpMode);
+                                    setError('');
+                                    setSuccessMessage('');
+                                }}>
+                                    {isSignUpMode ? 'Already have an account? Log in' : "Don't have an account? Sign up"}
+                                </p>
+                            )}
                         </div>
                     </motion.div>
                 </div>
@@ -313,6 +387,19 @@ const styles = {
         justifyContent: 'center',
         gap: '8px',
     },
+    success: {
+        color: '#155724',
+        backgroundColor: '#d4edda',
+        padding: '12px',
+        borderRadius: '12px',
+        marginBottom: '20px',
+        fontSize: '0.85rem',
+        border: '1px solid #c3e6cb',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '8px',
+    },
     formContainer: {
         display: 'flex',
         flexDirection: 'column',
@@ -357,6 +444,16 @@ const styles = {
         cursor: 'pointer',
         boxShadow: '0 4px 12px rgba(107, 15, 26, 0.2)',
         marginTop: '5px',
+    },
+    forgotBtn: {
+        background: 'none',
+        border: 'none',
+        color: '#6b0f1a',
+        fontSize: '0.85rem',
+        cursor: 'pointer',
+        textDecoration: 'underline',
+        padding: 0,
+        fontWeight: '500',
     },
     divider: {
         position: 'relative',
