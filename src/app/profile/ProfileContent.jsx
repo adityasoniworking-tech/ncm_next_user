@@ -80,16 +80,22 @@ export default function ProfileContent() {
 
     const handleSaveProfileName = async () => {
         if (!user) return;
+        
+        if (!profileData.displayName || profileData.displayName.trim() === '') {
+            alert("Profile Name is compulsory. Please enter your name.");
+            return;
+        }
+
         setSaving(true);
         try {
             await setDoc(doc(db, 'users', user.uid), {
-                displayName: profileData.displayName,
+                displayName: profileData.displayName.trim(),
                 updatedAt: new Date()
             }, { merge: true });
 
             if (auth.currentUser) {
                 await updateProfile(auth.currentUser, {
-                    displayName: profileData.displayName
+                    displayName: profileData.displayName.trim()
                 });
             }
 

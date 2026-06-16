@@ -21,10 +21,21 @@ const DeliveryMap = dynamic(() => import('./DeliveryMap'), {
     loading: () => <div style={{ height: '350px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8f9fa' }}>Loading Map...</div>
 });
 
+import { useRouter } from 'next/navigation';
+
 const CartModal = ({ isOpen, onClose }) => {
     const { cartItems, updateQuantity, cartTotal, clearCart, placeOrder, storeSettings } = useCart();
+    const router = useRouter();
     const [step, setStep] = useState(1);
+    const [checkoutSubStep, setCheckoutSubStep] = useState(1);
     const [deliveryType, setDeliveryType] = useState('Home Delivery');
+
+    useEffect(() => {
+        if (!isOpen) {
+            setStep(1);
+            setCheckoutSubStep(1);
+        }
+    }, [isOpen]);
 
     useEffect(() => {
         if (storeSettings) {
@@ -206,18 +217,70 @@ const CartModal = ({ isOpen, onClose }) => {
 
     if (!isOpen) return null;
 
-    const EmptyCartState = () => (
-        <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-            <div style={{ marginBottom: '20px', color: '#ccc', display: 'flex', justifyContent: 'center' }}>
-                <ShoppingCartIcon style={{ width: '48px', height: '48px' }} />
+    const EmptyCartState = () => {
+        const sprinkleColors = ['#ff6b6b', '#feca57', '#1dd1a1', '#5f27cd', '#ff9ff3', '#48dbfb'];
+        const sprinkles = Array.from({ length: 12 }).map((_, idx) => {
+            const left = Math.random() * 100;
+            const delay = Math.random() * 3;
+            const color = sprinkleColors[idx % sprinkleColors.length];
+            const size = Math.random() * 4 + 4;
+            return { left, delay, color, size, id: idx };
+        });
+
+        return (
+            <div style={{ textAlign: 'center', padding: '25px 15px', position: 'relative' }}>
+                <div className="sprinkle-container">
+                    {sprinkles.map(s => (
+                        <div 
+                            key={s.id}
+                            className="sprinkle"
+                            style={{
+                                left: `${s.left}%`,
+                                animationDelay: `${s.delay}s`,
+                                backgroundColor: s.color,
+                                width: `${s.size}px`,
+                                height: `${s.size}px`
+                            }}
+                        />
+                    ))}
+                </div>
+                
+                <div style={{ marginBottom: '10px' }}>
+                    <span className="empty-cart-cookie" role="img" aria-label="cookie">🍪</span>
+                </div>
+                
+                <h3 style={{ fontFamily: "'Playfair Display', serif", color: '#6b0f1a', marginBottom: '6px', fontSize: '1.25rem', fontWeight: '800' }}>
+                    Your Basket is Empty
+                </h3>
+                
+                <p style={{ color: '#777', fontSize: '0.85rem', marginBottom: '20px', maxWidth: '280px', margin: '0 auto 20px auto', lineHeight: '1.4' }}>
+                    Looks like you haven't added any sweet treats yet. Let's find something delicious!
+                </p>
+                
+                <button 
+                    onClick={() => {
+                        router.push('/menu');
+                        onClose();
+                    }} 
+                    className="start-shopping-btn"
+                    style={{ 
+                        background: '#6b0f1a', 
+                        color: 'white', 
+                        padding: '10px 24px', 
+                        borderRadius: '25px', 
+                        fontWeight: 'bold', 
+                        fontSize: '0.88rem',
+                        cursor: 'pointer', 
+                        border: 'none',
+                        boxShadow: '0 8px 20px rgba(107, 15, 26, 0.25)',
+                        transition: 'all 0.3s ease'
+                    }}
+                >
+                    Start Shopping ✨
+                </button>
             </div>
-            <h3 style={{ color: '#6b0f1a', marginBottom: '10px' }}>Your Basket is Empty</h3>
-            <p style={{ color: '#999', marginBottom: '20px' }}>Looks like you haven't added any sweet treats yet.</p>
-            <button onClick={onClose} style={{ background: 'white', border: '1px solid #6b0f1a', color: '#6b0f1a', padding: '10px 20px', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer', transition: '0.3s' }}>
-                Start Shopping
-            </button>
-        </div>
-    );
+        );
+    };
 
     const CartItemsList = () => (
         <>
@@ -262,312 +325,388 @@ const CartModal = ({ isOpen, onClose }) => {
         </>
     );
 
-    const CheckoutForm = () => (
-        <div>
-            <div style={{ marginBottom: '20px' }}>
-                <button onClick={() => setStep(1)} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '5px', padding: 0 }}>
-                    <ArrowLeftIcon style={{ width: '16px', height: '16px' }} /> Back to Cart
-                </button>
-            </div>
+    const CheckoutForm = () => {
+        if (checkoutSubStep === 1) {
+            return (
+                <div>
+                    <div style={{ marginBottom: '20px' }}>
+                        <button onClick={() => setStep(1)} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '5px', padding: 0 }}>
+                            <ArrowLeftIcon style={{ width: '16px', height: '16px' }} /> Back to Cart
+                        </button>
+                    </div>
 
-            <h3 style={{ fontFamily: "'Playfair Display', serif", color: '#6b0f1a', margin: '0 0 15px 0' }}>Checkout Details</h3>
+                    <h3 style={{ fontFamily: "'Playfair Display', serif", color: '#6b0f1a', margin: '0 0 15px 0' }}>Checkout Details</h3>
 
-            {(storeSettings?.showHomeDelivery ?? true) || (storeSettings?.showPickup ?? true) ? (
-                <div style={{ background: '#fff', padding: '10px', borderRadius: '10px', marginBottom: '15px', border: '1px solid #eee', display: 'flex', gap: '10px' }}>
-                    {(storeSettings?.showPickup ?? true) && (
-                        <label style={{ ...styles.deliveryRadio, background: deliveryType === 'Self Pickup' ? '#fff0f0' : '#fff', borderColor: deliveryType === 'Self Pickup' ? '#6b0f1a' : '#ddd' }}>
-                            <input type="radio" value="Self Pickup" checked={deliveryType === 'Self Pickup'} onChange={(e) => setDeliveryType(e.target.value)} style={{ accentColor: '#6b0f1a' }} />
-                            <span style={{ fontWeight: 'bold', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                <BuildingStorefrontIcon style={{ width: '18px', height: '18px' }} /> Pickup
-                            </span>
-                        </label>
-                    )}
-                    {(storeSettings?.showHomeDelivery ?? true) && (
-                        <label style={{ ...styles.deliveryRadio, background: deliveryType === 'Home Delivery' ? '#f0f8ff' : '#fff', borderColor: deliveryType === 'Home Delivery' ? '#007bff' : '#ddd' }}>
-                            <input type="radio" value="Home Delivery" checked={deliveryType === 'Home Delivery'} onChange={(e) => setDeliveryType(e.target.value)} style={{ accentColor: '#007bff' }} />
-                            <span style={{ fontWeight: 'bold', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                <HomeIcon style={{ width: '18px', height: '18px' }} /> Delivery
-                            </span>
-                        </label>
-                    )}
-                </div>
-            ) : (
-                <div style={{ background: '#fff9f9', color: '#6b0f1a', padding: '12px', borderRadius: '8px', marginBottom: '15px', border: '1px solid #ffdcdc', textAlign: 'center', fontWeight: 'bold' }}>
-                    Ordering is currently unavailable.
-                </div>
-            )}
-
-            <input
-                ref={nameRef}
-                value={custName}
-                onChange={e => setCustName(e.target.value)}
-                type="text"
-                placeholder="Full Name"
-                style={styles.input}
-            />
-            <input
-                value={custPhone}
-                onChange={e => setCustPhone(e.target.value)}
-                type="text"
-                placeholder="Phone Number"
-                style={styles.input}
-            />
-
-            {deliveryType === 'Home Delivery' && (
-                <div style={{ background: '#fff', border: '1px solid #eee', padding: '15px', borderRadius: '10px', marginBottom: '15px' }}>
-                    
-                    {addressMode === 'saved' && savedProfile && (savedProfile.street || savedProfile.city) ? (
-                        <div style={{ marginBottom: '15px', padding: '15px', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #ddd' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <h4 style={{ margin: '0 0 10px 0', color: '#495057', fontSize: '0.9rem', fontWeight: '600', textTransform: 'uppercase' }}>📍 Saved Address</h4>
-                                <button onClick={() => setAddressMode('manual')} style={{ background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold' }}>
-                                    + Add New
-                                </button>
-                            </div>
-                            <p style={{ margin: 0, color: '#666', fontSize: '0.9rem', lineHeight: '1.4' }}>
-                                {savedProfile.street}, {savedProfile.city}, {savedProfile.taluka}, {savedProfile.district}, {savedProfile.state} - {savedProfile.pincode}
-                                {savedProfile.landmark ? `, ${savedProfile.landmark}` : ''}
-                            </p>
+                    {(storeSettings?.showHomeDelivery ?? true) || (storeSettings?.showPickup ?? true) ? (
+                        <div style={{ background: '#fff', padding: '10px', borderRadius: '10px', marginBottom: '15px', border: '1px solid #eee', display: 'flex', gap: '10px' }}>
+                            {(storeSettings?.showPickup ?? true) && (
+                                <label style={{ ...styles.deliveryRadio, background: deliveryType === 'Self Pickup' ? '#fff0f0' : '#fff', borderColor: deliveryType === 'Self Pickup' ? '#6b0f1a' : '#ddd' }}>
+                                    <input type="radio" value="Self Pickup" checked={deliveryType === 'Self Pickup'} onChange={(e) => setDeliveryType(e.target.value)} style={{ accentColor: '#6b0f1a' }} />
+                                    <span style={{ fontWeight: 'bold', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                        <BuildingStorefrontIcon style={{ width: '18px', height: '18px' }} /> Pickup
+                                    </span>
+                                </label>
+                            )}
+                            {(storeSettings?.showHomeDelivery ?? true) && (
+                                <label style={{ ...styles.deliveryRadio, background: deliveryType === 'Home Delivery' ? '#f0f8ff' : '#fff', borderColor: deliveryType === 'Home Delivery' ? '#007bff' : '#ddd' }}>
+                                    <input type="radio" value="Home Delivery" checked={deliveryType === 'Home Delivery'} onChange={(e) => setDeliveryType(e.target.value)} style={{ accentColor: '#007bff' }} />
+                                    <span style={{ fontWeight: 'bold', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                        <HomeIcon style={{ width: '18px', height: '18px' }} /> Delivery
+                                    </span>
+                                </label>
+                            )}
                         </div>
                     ) : (
-                        <div style={{ marginBottom: '15px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                                <h4 style={{ margin: '0', color: '#495057', fontSize: '0.9rem', fontWeight: '600', textTransform: 'uppercase' }}>📍 Delivery Address</h4>
-                                {savedProfile && (savedProfile.street || savedProfile.city) && (
-                                    <button onClick={() => setAddressMode('saved')} style={{ background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold' }}>
-                                        Use Saved Address
-                                    </button>
-                                )}
-                            </div>
-                            <input value={street} onChange={e => setStreet(e.target.value)} type="text" placeholder="House No. / Building / Street Name" style={styles.input} />
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
-                                <input value={city} onChange={e => setCity(e.target.value)} type="text" placeholder="City / Area" style={styles.inputGrid} />
-                                <input value={taluka} onChange={e => setTaluka(e.target.value)} type="text" placeholder="Taluka" style={styles.inputGrid} />
-                                <input value={district} onChange={e => setDistrict(e.target.value)} type="text" placeholder="District" style={styles.inputGrid} />
-                                <input value={stateName} onChange={e => setStateName(e.target.value)} type="text" placeholder="State" style={styles.inputGrid} />
-                                <input value={pincode} onChange={e => setPincode(e.target.value)} type="text" placeholder="Pincode" maxLength="6" style={styles.inputGrid} />
-                                <input value={landmark} onChange={e => setLandmark(e.target.value)} type="text" placeholder="Landmark (Optional)" style={styles.inputGrid} />
-                            </div>
+                        <div style={{ background: '#fff9f9', color: '#6b0f1a', padding: '12px', borderRadius: '8px', marginBottom: '15px', border: '1px solid #ffdcdc', textAlign: 'center', fontWeight: 'bold' }}>
+                            Ordering is currently unavailable.
                         </div>
                     )}
 
-                    <div style={{ borderTop: '1px dashed #eee', paddingTop: '15px' }}>
-                        <div style={{ display: 'grid', gap: '10px' }}>
-                            <div style={{ background: '#fff9f9', border: '1px dashed #6b0f1a', padding: '12px', borderRadius: '8px', color: '#6b0f1a', fontSize: '0.9rem', textAlign: 'center' }}>
-                                {selectedLocation ? (
-                                    <div style={{ color: '#2e7d32', fontWeight: 'bold' }}>
-                                        ✓ {mapLocationText} ({deliveryDistance.toFixed(1)} km)
-                                    </div>
-                                ) : (
-                                    mapLocationText
-                                )}
-                            </div>
+                    <input
+                        ref={nameRef}
+                        value={custName}
+                        onChange={e => setCustName(e.target.value)}
+                        type="text"
+                        placeholder="Full Name"
+                        style={styles.input}
+                    />
+                    <input
+                        value={custPhone}
+                        onChange={e => setCustPhone(e.target.value)}
+                        type="text"
+                        placeholder="Phone Number"
+                        style={styles.input}
+                    />
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                <button
-                                    onClick={handleLocateMe}
-                                    disabled={geolocationLoading}
-                                    style={{ background: 'white', color: geolocationLoading ? '#666' : '#28a745', border: `1px solid ${geolocationLoading ? '#ccc' : '#28a745'}`, padding: '10px', borderRadius: '6px', fontSize: '0.9rem', fontWeight: 'bold', cursor: geolocationLoading ? 'not-allowed' : 'pointer' }}
-                                >
-                                    {geolocationLoading ? 'Locating...' : 'Locate Me'}
-                                </button>
-                                <button
-                                    onClick={(e) => { e.preventDefault(); setShowMap(true); }}
-                                    style={{ background: 'white', color: '#007bff', border: '1px solid #007bff', padding: '10px', borderRadius: '6px', fontSize: '0.9rem', fontWeight: 'bold', cursor: 'pointer' }}
-                                >
-                                    Open Map
-                                </button>
+                    <button
+                        onClick={() => {
+                            if (!custName || custName.trim() === '' || !custPhone || custPhone.trim() === '') {
+                                alert('Please enter your full name and phone number');
+                                return;
+                            }
+                            const phoneRegex = /^[6-9]\d{9}$/;
+                            if (!phoneRegex.test(custPhone.replace(/\s/g, ''))) {
+                                alert('Please enter a valid 10-digit phone number');
+                                return;
+                            }
+                            setCheckoutSubStep(2);
+                        }}
+                        style={{ width: '100%', background: '#6b0f1a', color: 'white', padding: '15px', border: 'none', borderRadius: '10px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginTop: '15px' }}
+                    >
+                        {deliveryType === 'Home Delivery' ? 'Continue to Address' : 'Continue to Summary'} <ArrowRightIcon style={{ width: '20px', height: '20px' }} />
+                    </button>
+                </div>
+            );
+        }
+
+        return (
+            <div>
+                <div style={{ marginBottom: '20px' }}>
+                    <button onClick={() => setCheckoutSubStep(1)} style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '5px', padding: 0 }}>
+                        <ArrowLeftIcon style={{ width: '16px', height: '16px' }} /> Back to Personal Details
+                    </button>
+                </div>
+
+                <h3 style={{ fontFamily: "'Playfair Display', serif", color: '#6b0f1a', margin: '0 0 15px 0' }}>
+                    {deliveryType === 'Home Delivery' ? 'Delivery Address & Confirm' : 'Confirm Order'}
+                </h3>
+
+                {deliveryType === 'Home Delivery' && (
+                    <div style={{ background: '#fff', border: '1px solid #eee', padding: '15px', borderRadius: '10px', marginBottom: '15px' }}>
+                        
+                        {addressMode === 'saved' && savedProfile && (savedProfile.street || savedProfile.city) ? (
+                            <div style={{ marginBottom: '15px', padding: '15px', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #ddd' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                    <h4 style={{ margin: '0 0 10px 0', color: '#495057', fontSize: '0.9rem', fontWeight: '600', textTransform: 'uppercase' }}>📍 Saved Address</h4>
+                                    <button onClick={() => setAddressMode('manual')} style={{ background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                                        + Add New
+                                    </button>
+                                </div>
+                                <p style={{ margin: 0, color: '#666', fontSize: '0.9rem', lineHeight: '1.4' }}>
+                                    {savedProfile.street}, {savedProfile.city}, {savedProfile.taluka}, {savedProfile.district}, {savedProfile.state} - {savedProfile.pincode}
+                                    {savedProfile.landmark ? `, ${savedProfile.landmark}` : ''}
+                                </p>
+                            </div>
+                        ) : (
+                            <div style={{ marginBottom: '15px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                    <h4 style={{ margin: '0', color: '#495057', fontSize: '0.9rem', fontWeight: '600', textTransform: 'uppercase' }}>📍 Delivery Address</h4>
+                                    {savedProfile && (savedProfile.street || savedProfile.city) && (
+                                        <button onClick={() => setAddressMode('saved')} style={{ background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                                            Use Saved Address
+                                        </button>
+                                    )}
+                                </div>
+                                <input value={street} onChange={e => setStreet(e.target.value)} type="text" placeholder="House No. / Building / Street Name" style={styles.input} />
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                                    <input value={city} onChange={e => setCity(e.target.value)} type="text" placeholder="City / Area" style={styles.inputGrid} />
+                                    <input value={taluka} onChange={e => setTaluka(e.target.value)} type="text" placeholder="Taluka" style={styles.inputGrid} />
+                                    <input value={district} onChange={e => setDistrict(e.target.value)} type="text" placeholder="District" style={styles.inputGrid} />
+                                    <input value={stateName} onChange={e => setStateName(e.target.value)} type="text" placeholder="State" style={styles.inputGrid} />
+                                    <input value={pincode} onChange={e => setPincode(e.target.value)} type="text" placeholder="Pincode" maxLength="6" style={styles.inputGrid} />
+                                    <input value={landmark} onChange={e => setLandmark(e.target.value)} type="text" placeholder="Landmark (Optional)" style={styles.inputGrid} />
+                                </div>
+                            </div>
+                        )}
+
+                        <div style={{ borderTop: '1px dashed #eee', paddingTop: '15px' }}>
+                            <div style={{ display: 'grid', gap: '10px' }}>
+                                <div style={{ background: '#fff9f9', border: '1px dashed #6b0f1a', padding: '12px', borderRadius: '8px', color: '#6b0f1a', fontSize: '0.9rem', textAlign: 'center' }}>
+                                    {selectedLocation ? (
+                                        <div style={{ color: '#2e7d32', fontWeight: 'bold' }}>
+                                            ✓ {mapLocationText} ({deliveryDistance.toFixed(1)} km)
+                                        </div>
+                                    ) : (
+                                        mapLocationText
+                                    )}
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                    <button
+                                        onClick={handleLocateMe}
+                                        disabled={geolocationLoading}
+                                        style={{ background: 'white', color: geolocationLoading ? '#666' : '#28a745', border: `1px solid ${geolocationLoading ? '#ccc' : '#28a745'}`, padding: '10px', borderRadius: '6px', fontSize: '0.9rem', fontWeight: 'bold', cursor: geolocationLoading ? 'not-allowed' : 'pointer' }}
+                                    >
+                                        {geolocationLoading ? 'Locating...' : 'Locate Me'}
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.preventDefault(); setShowMap(true); }}
+                                        style={{ background: 'white', color: '#007bff', border: '1px solid #007bff', padding: '10px', borderRadius: '6px', fontSize: '0.9rem', fontWeight: 'bold', cursor: 'pointer' }}
+                                    >
+                                        Open Map
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {availableReward && (
-                <div style={{ background: '#e8f5e9', padding: '15px', borderRadius: '10px', marginBottom: '15px', border: '1px solid #c8e6c9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div>
-                        <h4 style={{ margin: '0 0 5px 0', color: '#2e7d32', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <GiftIcon style={{ width: '16px', height: '16px' }} /> Loyalty Reward Available!
-                        </h4>
-                        <p style={{ margin: 0, fontSize: '0.8rem', color: '#388e3c' }}>
-                            You have a {availableReward.discountType === 'percentage' ? `${availableReward.discountAmount}%` : `₹${availableReward.discountAmount}`} discount reward!
-                        </p>
-                    </div>
-                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', background: '#fff', padding: '8px 12px', borderRadius: '20px', border: '1px solid #a5d6a7' }}>
-                        <input 
-                            type="checkbox" 
-                            checked={applyReward} 
-                            onChange={(e) => setApplyReward(e.target.checked)}
-                            style={{ marginRight: '8px', accentColor: '#2e7d32' }}
-                        />
-                        <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#2e7d32' }}>Apply</span>
-                    </label>
-                </div>
-            )}
-
-            <div style={{ background: '#f8f9fa', padding: '15px', borderRadius: '10px', marginBottom: '15px', borderLeft: '4px solid #6b0f1a' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                    <span style={{ color: '#666' }}>Subtotal</span>
-                    <span style={{ color: '#333', fontWeight: '600' }}>₹{cartTotal.toFixed(2)}</span>
-                </div>
-                {deliveryType === 'Home Delivery' && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                        <span style={{ color: '#666' }}>Delivery Charge</span>
-                        <span style={{ color: '#6b0f1a', fontWeight: 'bold' }}>₹{deliveryCharge.toFixed(2)}</span>
+                {availableReward && (
+                    <div style={{ background: '#e8f5e9', padding: '15px', borderRadius: '10px', marginBottom: '15px', border: '1px solid #c8e6c9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div>
+                            <h4 style={{ margin: '0 0 5px 0', color: '#2e7d32', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <GiftIcon style={{ width: '16px', height: '16px' }} /> Loyalty Reward Available!
+                            </h4>
+                            <p style={{ margin: 0, fontSize: '0.8rem', color: '#388e3c' }}>
+                                You have a {availableReward.discountType === 'percentage' ? `${availableReward.discountAmount}%` : `₹${availableReward.discountAmount}`} discount reward!
+                            </p>
+                        </div>
+                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', background: '#fff', padding: '8px 12px', borderRadius: '20px', border: '1px solid #a5d6a7' }}>
+                            <input 
+                                type="checkbox" 
+                                checked={applyReward} 
+                                onChange={(e) => setApplyReward(e.target.checked)}
+                                style={{ marginRight: '8px', accentColor: '#2e7d32' }}
+                            />
+                            <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#2e7d32' }}>Apply</span>
+                        </label>
                     </div>
                 )}
-                {applyReward && rewardDiscount > 0 && (
+
+                <div style={{ background: '#f8f9fa', padding: '15px', borderRadius: '10px', marginBottom: '15px', borderLeft: '4px solid #6b0f1a' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                        <span style={{ color: '#2e7d32', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <GiftIcon style={{ width: '16px', height: '16px' }} /> Loyalty Discount
-                        </span>
-                        <span style={{ color: '#2e7d32', fontWeight: 'bold' }}>-₹{rewardDiscount.toFixed(2)}</span>
+                        <span style={{ color: '#666' }}>Subtotal</span>
+                        <span style={{ color: '#333', fontWeight: '600' }}>₹{cartTotal.toFixed(2)}</span>
                     </div>
-                )}
-                
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed #ddd', marginTop: '10px', paddingTop: '10px' }}>
-                    <span style={{ fontWeight: 'bold' }}>Final Total</span>
-                    <span style={{ color: '#6b0f1a', fontWeight: 'bold', fontSize: '1.1rem' }}>₹{finalTotal.toFixed(2)}</span>
-                </div>
-            </div>
-
-            <label style={{ display: 'flex', alignItems: 'flex-start', background: '#ffecec', padding: '12px', borderRadius: '8px', marginBottom: '15px', border: '1px solid #ffdcdc', cursor: 'pointer' }}>
-                <input
-                    type="checkbox"
-                    checked={agreedToTerms}
-                    onChange={(e) => setAgreedToTerms(e.target.checked)}
-                    style={{ marginTop: '4px', marginRight: '10px', accentColor: '#6b0f1a' }}
-                />
-                <span style={{ fontSize: '0.85rem', color: '#6b0f1a', fontWeight: '600', lineHeight: '1.4' }}>
-                    By placing this order, I acknowledge that the order cannot be cancelled after confirmation
-                </span>
-            </label>
-
-            <button
-                onClick={async () => {
-                    if (isPlacingOrder) return;
+                    {deliveryType === 'Home Delivery' && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                            <span style={{ color: '#666' }}>Delivery Charge</span>
+                            <span style={{ color: '#6b0f1a', fontWeight: 'bold' }}>₹{deliveryCharge.toFixed(2)}</span>
+                        </div>
+                    )}
+                    {applyReward && rewardDiscount > 0 && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                            <span style={{ color: '#2e7d32', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <GiftIcon style={{ width: '16px', height: '16px' }} /> Loyalty Discount
+                            </span>
+                            <span style={{ color: '#2e7d32', fontWeight: 'bold' }}>-₹{rewardDiscount.toFixed(2)}</span>
+                        </div>
+                    )}
                     
-                    if (!custName || !custPhone) {
-                        alert('Please enter your name and phone number');
-                        return;
-                    }
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed #ddd', marginTop: '10px', paddingTop: '10px' }}>
+                        <span style={{ fontWeight: 'bold' }}>Final Total</span>
+                        <span style={{ color: '#6b0f1a', fontWeight: 'bold', fontSize: '1.1rem' }}>₹{finalTotal.toFixed(2)}</span>
+                    </div>
+                </div>
 
-                    const phoneRegex = /^[6-9]\d{9}$/;
-                    if (!phoneRegex.test(custPhone.replace(/\s/g, ''))) {
-                        alert('Please enter a valid phone number');
-                        return;
-                    }
-                    if (deliveryType === 'Home Delivery') {
-                        if (addressMode === 'manual' && (!street || !city || !taluka || !district || !stateName || !pincode)) {
-                            alert('Please enter your complete delivery address');
+                <label style={{ display: 'flex', alignItems: 'flex-start', background: '#ffecec', padding: '12px', borderRadius: '8px', marginBottom: '15px', border: '1px solid #ffdcdc', cursor: 'pointer' }}>
+                    <input
+                        type="checkbox"
+                        checked={agreedToTerms}
+                        onChange={(e) => setAgreedToTerms(e.target.checked)}
+                        style={{ marginTop: '4px', marginRight: '10px', accentColor: '#6b0f1a' }}
+                    />
+                    <span style={{ fontSize: '0.85rem', color: '#6b0f1a', fontWeight: '600', lineHeight: '1.4' }}>
+                        By placing this order, I acknowledge that the order cannot be cancelled after confirmation
+                    </span>
+                </label>
+
+                <button
+                    onClick={async () => {
+                        if (isPlacingOrder) return;
+                        
+                        if (!custName || custName.trim() === '' || !custPhone || custPhone.trim() === '') {
+                            alert('Please enter your full name and phone number');
                             return;
                         }
-                        if (addressMode === 'manual') {
-                            const pincodeRegex = /^[1-9][0-9]{5}$/;
-                            if (!pincodeRegex.test(pincode.replace(/\s/g, ''))) {
-                                alert('Please enter a valid 6-digit Indian Pincode');
+
+                        const phoneRegex = /^[6-9]\d{9}$/;
+                        if (!phoneRegex.test(custPhone.replace(/\s/g, ''))) {
+                            alert('Please enter a valid phone number');
+                            return;
+                        }
+                        if (deliveryType === 'Home Delivery') {
+                            if (addressMode === 'manual' && (!street || !city || !taluka || !district || !stateName || !pincode)) {
+                                alert('Please enter your complete delivery address');
+                                return;
+                            }
+                            if (addressMode === 'manual') {
+                                const pincodeRegex = /^[1-9][0-9]{5}$/;
+                                if (!pincodeRegex.test(pincode.replace(/\s/g, ''))) {
+                                    alert('Please enter a valid 6-digit Indian Pincode');
+                                    return;
+                                }
+                            }
+                            if (addressMode === 'saved' && (!savedProfile || !savedProfile.street || !savedProfile.city)) {
+                                alert('Saved address is incomplete. Please enter manually.');
+                                return;
+                            }
+                            if (!selectedLocation) {
+                                alert('Please select your location on the map');
                                 return;
                             }
                         }
-                        if (addressMode === 'saved' && (!savedProfile || !savedProfile.street || !savedProfile.city)) {
-                            alert('Saved address is incomplete. Please enter manually.');
+                        if (!agreedToTerms) {
+                            alert('Please acknowledge terms');
                             return;
                         }
-                        if (!selectedLocation) {
-                            alert('Please select your location on the map');
-                            return;
-                        }
-                    }
-                    if (!agreedToTerms) {
-                        alert('Please acknowledge terms');
-                        return;
-                    }
 
-                    setIsPlacingOrder(true);
-                    try {
-                        const orderMeta = {
-                            name: custName,
-                            phone: custPhone,
-                            userEmail: auth.currentUser.email,
-                            deliveryType,
-                            address: deliveryType === 'Home Delivery' 
-                                ? (addressMode === 'saved' 
-                                    ? `${savedProfile.street}, ${savedProfile.city}, ${savedProfile.taluka || ''} ${savedProfile.district || ''} ${savedProfile.state || ''} ${savedProfile.pincode || ''}`.trim()
-                                    : `${street}, ${city}, ${taluka} ${district} ${stateName} ${pincode}`.trim())
-                                : null,
-                            structuredAddress: deliveryType === 'Home Delivery'
-                                ? (addressMode === 'saved' 
-                                    ? { streetName: savedProfile.street, city: savedProfile.city, taluka: savedProfile.taluka, district: savedProfile.district, stateName: savedProfile.state, pincode: savedProfile.pincode, landmark: savedProfile.landmark }
-                                    : { streetName: street, city, taluka, district, stateName, pincode, landmark })
-                                : null,
-                            coordinates: selectedLocation ? { lat: selectedLocation[0], lng: selectedLocation[1] } : null,
-                            deliveryCharge: deliveryCharge,
-                            distance: deliveryDistance,
-                            paymentMethod: 'COD',
-                            discountAmount: rewardDiscount,
-                            rewardId: applyReward && availableReward ? availableReward.id : null
-                        };
-
-                        await placeOrder(orderMeta);
-                        
-                        // Telegram Notification
+                        setIsPlacingOrder(true);
                         try {
-                            const botToken = process.env.NEXT_PUBLIC_TELEGRAM_BOT_TOKEN;
-                            const chatId = process.env.NEXT_PUBLIC_TELEGRAM_CHAT_ID;
-                            if (botToken && chatId) {
-                                let itemsText = cartItems.map(i => `• ${i.qty}x ${i.name} (₹${(i.price * i.qty).toFixed(2)})`).join('\n');
-                                let message = `🚨 *NEW ORDER RECEIVED!* 🚨\n\n`;
-                                message += `*Customer:* ${custName}\n`;
-                                message += `*Phone:* ${custPhone}\n`;
-                                message += `*Type:* ${deliveryType}\n`;
-                                if (deliveryType === 'Home Delivery') message += `*Address:* ${orderMeta.address}\n`;
-                                message += `\n*Items:*\n${itemsText}\n\n`;
-                                message += `*Total Amount:* ₹${finalTotal.toFixed(2)} (COD)`;
+                            const orderMeta = {
+                                name: custName,
+                                phone: custPhone,
+                                userEmail: auth.currentUser.email,
+                                deliveryType,
+                                address: deliveryType === 'Home Delivery' 
+                                    ? (addressMode === 'saved' 
+                                        ? `${savedProfile.street}, ${savedProfile.city}, ${savedProfile.taluka || ''} ${savedProfile.district || ''} ${savedProfile.state || ''} ${savedProfile.pincode || ''}`.trim()
+                                        : `${street}, ${city}, ${taluka} ${district} ${stateName} ${pincode}`.trim())
+                                    : null,
+                                structuredAddress: deliveryType === 'Home Delivery'
+                                    ? (addressMode === 'saved' 
+                                        ? { streetName: savedProfile.street, city: savedProfile.city, taluka: savedProfile.taluka, district: savedProfile.district, stateName: savedProfile.state, pincode: savedProfile.pincode, landmark: savedProfile.landmark }
+                                        : { streetName: street, city, taluka, district, stateName, pincode, landmark })
+                                    : null,
+                                coordinates: selectedLocation ? { lat: selectedLocation[0], lng: selectedLocation[1] } : null,
+                                deliveryCharge: deliveryCharge,
+                                distance: deliveryDistance,
+                                paymentMethod: 'COD',
+                                discountAmount: rewardDiscount,
+                                rewardId: applyReward && availableReward ? availableReward.id : null
+                            };
 
-                                await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ chat_id: chatId.trim(), text: message, parse_mode: 'Markdown' })
-                                });
-                            }
-                        } catch (e) { console.error(e); }
+                            await placeOrder(orderMeta);
+                            
+                            // Telegram Notification
+                            try {
+                                const botToken = process.env.NEXT_PUBLIC_TELEGRAM_BOT_TOKEN;
+                                const chatId = process.env.NEXT_PUBLIC_TELEGRAM_CHAT_ID;
+                                if (botToken && chatId) {
+                                    let itemsText = cartItems.map(i => `• ${i.qty}x ${i.name} (₹${(i.price * i.qty).toFixed(2)})`).join('\n');
+                                    let message = `🚨 *NEW ORDER RECEIVED!* 🚨\n\n`;
+                                    message += `*Customer:* ${custName}\n`;
+                                    message += `*Phone:* ${custPhone}\n`;
+                                    message += `*Type:* ${deliveryType}\n`;
+                                    if (deliveryType === 'Home Delivery') message += `*Address:* ${orderMeta.address}\n`;
+                                    message += `\n*Items:*\n${itemsText}\n\n`;
+                                    message += `*Total Amount:* ₹${finalTotal.toFixed(2)} (COD)`;
 
-                        setStep(1);
-                        onClose();
-                    } catch (err) {
-                        console.error(err);
-                        alert('Failed to place order.');
-                    } finally {
-                        setIsPlacingOrder(false);
-                    }
-                }}
-                disabled={isPlacingOrder || !agreedToTerms || !custName || !custPhone || (deliveryType === 'Home Delivery' && ((addressMode === 'manual' && (!street || !city || !taluka || !district || !stateName || !pincode)) || (addressMode === 'saved' && !savedProfile?.street) || !selectedLocation))}
-                style={{
-                    width: '100%', 
-                    background: (isPlacingOrder || !agreedToTerms || !custName || !custPhone || (deliveryType === 'Home Delivery' && ((addressMode === 'manual' && (!street || !city || !taluka || !district || !stateName || !pincode)) || (addressMode === 'saved' && !savedProfile?.street) || !selectedLocation))) ? '#ccc' : '#6b0f1a',
-                    color: 'white', padding: '15px', border: 'none', borderRadius: '10px', fontWeight: 'bold', fontSize: '1.1rem',
-                    cursor: (isPlacingOrder || !agreedToTerms || !custName || !custPhone || (deliveryType === 'Home Delivery' && ((addressMode === 'manual' && (!street || !city || !taluka || !district || !stateName || !pincode)) || (addressMode === 'saved' && !savedProfile?.street) || !selectedLocation))) ? 'not-allowed' : 'pointer'
-                }}
-            >
-                {isPlacingOrder ? (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <ArrowPathIcon style={{ width: '20px', height: '20px', animation: 'spin 1s linear infinite' }} /> Processing...
-                    </span>
-                ) : (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        Confirm Order (COD) <CheckCircleIcon style={{ width: '20px', height: '20px' }} />
-                    </span>
-                )}
-            </button>
-        </div>
-    );
+                                    await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ chat_id: chatId.trim(), text: message, parse_mode: 'Markdown' })
+                                    });
+                                }
+                            } catch (e) { console.error(e); }
+
+                            setStep(1);
+                            setCheckoutSubStep(1);
+                            onClose();
+                        } catch (err) {
+                            console.error(err);
+                            alert('Failed to place order.');
+                        } finally {
+                            setIsPlacingOrder(false);
+                        }
+                    }}
+                    disabled={isPlacingOrder || !agreedToTerms || !custName || !custPhone || (deliveryType === 'Home Delivery' && ((addressMode === 'manual' && (!street || !city || !taluka || !district || !stateName || !pincode)) || (addressMode === 'saved' && !savedProfile?.street) || !selectedLocation))}
+                    style={{
+                        width: '100%', 
+                        background: (isPlacingOrder || !agreedToTerms || !custName || !custPhone || (deliveryType === 'Home Delivery' && ((addressMode === 'manual' && (!street || !city || !taluka || !district || !stateName || !pincode)) || (addressMode === 'saved' && !savedProfile?.street) || !selectedLocation))) ? '#ccc' : '#6b0f1a',
+                        color: 'white', padding: '15px', border: 'none', borderRadius: '10px', fontWeight: 'bold', fontSize: '1.1rem',
+                        cursor: (isPlacingOrder || !agreedToTerms || !custName || !custPhone || (deliveryType === 'Home Delivery' && ((addressMode === 'manual' && (!street || !city || !taluka || !district || !stateName || !pincode)) || (addressMode === 'saved' && !savedProfile?.street) || !selectedLocation))) ? 'not-allowed' : 'pointer'
+                    }}
+                >
+                    {isPlacingOrder ? (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <ArrowPathIcon style={{ width: '20px', height: '20px', animation: 'spin 1s linear infinite' }} /> Processing...
+                        </span>
+                    ) : (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            Confirm Order (COD) <CheckCircleIcon style={{ width: '20px', height: '20px' }} />
+                        </span>
+                    )}
+                </button>
+            </div>
+        );
+    };
 
     return (
-        <div style={styles.overlay} onClick={() => { setStep(1); onClose(); }}>
+        <div style={styles.overlay} onClick={() => { setStep(1); setCheckoutSubStep(1); onClose(); }}>
+            <style>{`
+                @keyframes float {
+                    0%, 100% { transform: translateY(0) rotate(0deg); }
+                    50% { transform: translateY(-8px) rotate(5deg); }
+                }
+                @keyframes sprinkleFall {
+                    0% { transform: translateY(-15px) rotate(0deg); opacity: 0; }
+                    50% { opacity: 0.8; }
+                    100% { transform: translateY(90px) rotate(360deg); opacity: 0; }
+                }
+                .empty-cart-cookie {
+                    font-size: 60px;
+                    display: inline-block;
+                    animation: float 4s ease-in-out infinite;
+                    filter: drop-shadow(0 8px 16px rgba(107, 15, 26, 0.15));
+                }
+                .sprinkle-container {
+                    position: relative;
+                    height: 50px;
+                    width: 200px;
+                    margin: 0 auto -10px auto;
+                    overflow: hidden;
+                }
+                .sprinkle {
+                    position: absolute;
+                    width: 5px;
+                    height: 5px;
+                    border-radius: 50%;
+                    animation: sprinkleFall 3s linear infinite;
+                }
+                .start-shopping-btn:hover {
+                    background: #8b2530 !important;
+                    transform: translateY(-2px);
+                    box-shadow: 0 10px 20px rgba(107, 15, 26, 0.3) !important;
+                }
+                .start-shopping-btn:active {
+                    transform: translateY(0);
+                }
+            `}</style>
             <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
                 <div style={{ position: 'sticky', top: 0, background: 'white', zIndex: 100, padding: '15px 20px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h2 style={{ fontFamily: "'Playfair Display', serif", margin: 0, fontSize: '1.5rem', color: '#6b0f1a' }}>Your Basket</h2>
-                    <button onClick={() => { setStep(1); onClose(); }} style={{ background: 'transparent', border: 'none', fontSize: '24px', color: '#666', cursor: 'pointer', padding: 0 }}>&times;</button>
+                    <button onClick={() => { setStep(1); setCheckoutSubStep(1); onClose(); }} style={{ background: 'transparent', border: 'none', fontSize: '24px', color: '#666', cursor: 'pointer', padding: 0 }}>&times;</button>
                 </div>
                 <div style={{ padding: '20px' }}>
                     {cartItems.length === 0 ? EmptyCartState() : (step === 1 ? CartItemsList() : CheckoutForm())}

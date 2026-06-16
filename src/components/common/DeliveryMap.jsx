@@ -249,16 +249,36 @@ const DeliveryMap = ({ onConfirm, onClose, initialLocation }) => {
 
     return (
         <div style={styles.overlay}>
-            <div style={styles.modal}>
+            <style>{`
+                @media (max-width: 640px) {
+                    .delivery-map-modal-card {
+                        max-height: 95vh !important;
+                        border-radius: 12px !important;
+                    }
+                    .delivery-map-header {
+                        padding: 10px 15px !important;
+                    }
+                    .delivery-map-search-bar {
+                        padding: 10px 15px !important;
+                    }
+                    .delivery-map-container {
+                        height: 220px !important;
+                    }
+                    .delivery-map-footer {
+                        padding: 15px !important;
+                    }
+                }
+            `}</style>
+            <div className="delivery-map-modal-card" style={styles.modal}>
 
                 {/* Header */}
-                <div style={styles.header}>
+                <div className="delivery-map-header" style={styles.header}>
                     <h3 style={{ margin: 0, color: '#6b0f1a', fontFamily: "'Playfair Display', serif" }}>📍 Select Delivery Location</h3>
                     <button onClick={onClose} style={styles.closeBtn}>&times;</button>
                 </div>
 
                 {/* Search & Location Bar */}
-                <div style={{ padding: '15px' }}>
+                <div className="delivery-map-search-bar" style={{ padding: '15px' }}>
                     <div style={{ position: 'relative', marginBottom: '10px' }}>
                         <input
                             type="text"
@@ -325,7 +345,7 @@ const DeliveryMap = ({ onConfirm, onClose, initialLocation }) => {
                 </div>
 
                 {/* Result Info Area */}
-                <div style={styles.footer}>
+                <div className="delivery-map-footer" style={styles.footer}>
                     <div style={{ background: '#f8f9fa', padding: '12px', borderRadius: '8px', marginBottom: '15px', border: '1px solid #eee' }}>
                         <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#333', marginBottom: '5px' }}>{addressText}</div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#666', borderTop: '1px dashed #ddd', paddingTop: '8px', marginTop: '8px' }}>
@@ -363,7 +383,8 @@ const styles = {
     },
     modal: {
         background: 'white', width: '90%', maxWidth: '500px', borderRadius: '15px',
-        boxShadow: '0 10px 30px rgba(0,0,0,0.2)', overflow: 'hidden', display: 'flex', flexDirection: 'column'
+        boxShadow: '0 10px 30px rgba(0,0,0,0.2)', overflow: 'hidden', display: 'flex', flexDirection: 'column',
+        maxHeight: '95vh', overflowY: 'auto'
     },
     header: {
         padding: '15px 20px', borderBottom: '1px solid #eee', display: 'flex',

@@ -11,6 +11,8 @@
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",
     "@heroicons/react": "^2.2.0",
+    "@keystatic/core": "^0.5.50",
+    "@keystatic/next": "^5.0.4",
     "@splinetool/react-spline": "^4.1.0",
     "@splinetool/runtime": "^1.12.90",
     "firebase": "^12.12.1",
