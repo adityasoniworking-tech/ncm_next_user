@@ -62,10 +62,6 @@ export default function ClientLayout({ children }) {
 
     const pathname = usePathname();
 
-    if (pathname && pathname.startsWith('/keystatic')) {
-        return <>{children}</>;
-    }
-
     return (
         <>
             <Header 
