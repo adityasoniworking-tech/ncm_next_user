@@ -78,7 +78,7 @@ const AuthModal = ({ isOpen, onClose }) => {
 
         try {
             await sendPasswordResetEmail(auth, email);
-            setSuccessMessage("Password reset email sent! Please check your inbox.");
+            setSuccessMessage("Password reset email sent! Please check your inbox or spam folder.");
             setIsForgotPasswordMode(false);
         } catch (err) {
             console.error("Reset password error:", err);

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { auth } from '../../services/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import Header from './Header';
@@ -59,6 +59,12 @@ export default function ClientLayout({ children }) {
             console.error("Logout error:", error);
         }
     };
+
+    const pathname = usePathname();
+
+    if (pathname && pathname.startsWith('/keystatic')) {
+        return <>{children}</>;
+    }
 
     return (
         <>
