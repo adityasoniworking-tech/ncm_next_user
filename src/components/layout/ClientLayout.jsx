@@ -11,6 +11,7 @@ import CartModal from '../common/CartModal';
 import SuccessModal from '../common/SuccessModal';
 import LogoutModal from '../common/LogoutModal';
 import PWAUpdater from '../common/PWAUpdater';
+import InstallAppFAB from '../common/InstallAppFAB';
 import { useCart } from '../../context/CartContext';
 import { ShoppingCartIcon } from '@heroicons/react/24/solid';
 // Note: PWA Updater and Install Prompt might need specific Next.js implementation
@@ -107,6 +108,8 @@ export default function ClientLayout({ children }) {
                     {cartCount}
                 </span>
             </div>
+
+            <InstallAppFAB />
         </>
     );
 }
