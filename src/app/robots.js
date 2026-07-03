@@ -3,8 +3,7 @@ export default function robots() {
     rules: [
       {
         userAgent: '*',
-        allow: '/',
-        disallow: ['/api/', '/admin/'], // Adjust if you have these routes
+        disallow: '/', // Block all crawling before launch
       },
     ],
     sitemap: 'https://ncm-website.vercel.app/sitemap.xml',
