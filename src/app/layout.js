@@ -18,6 +18,15 @@ const playfair = Playfair_Display({
 import { CartProvider } from "@/context/CartContext";
 import ClientLayout from "@/components/layout/ClientLayout";
 
+export const viewport = {
+  themeColor: '#6b0f1a',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+};
+
 export const metadata = {
   metadataBase: new URL('https://ncm-website.vercel.app'), // Replace with actual domain when available
   title: {
@@ -40,6 +49,11 @@ export const metadata = {
     apple: "/assets/icons/apple-touch-icon.png",
   },
   manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'NuttyChocoMorsels',
+  },
   openGraph: {
     title: "NuttyChocoMorsels | Premium 100% Eggless Bakery",
     description: "Indulge in our premium 100% eggless delights. From signature brownies to viral chocolates, we bring luxury bakery to your doorstep.",
