@@ -48,8 +48,8 @@ body {
     overflow-x: hidden;
 }
 
-/* Native App Feel Adjustments ONLY for PWA (Temporarily applied to mobile web for testing) */
-@media all and (max-width: 768px) {
+/* Native App Feel Adjustments ONLY for PWA (Standalone) */
+@media all and (display-mode: standalone), all and (display-mode: fullscreen), all and (display-mode: minimal-ui), all and (display-mode: window-controls-overlay) {
     html {
         overscroll-behavior-y: none;
     }
@@ -150,8 +150,10 @@ main {
     font-weight: bold;
 }
 
-/* Show bottom nav on mobile (temporarily applied to web for testing) */
-@media all and (max-width: 768px) {
+/* Show bottom nav on mobile PWA only */
+@media all and (display-mode: standalone) and (max-width: 768px),
+       all and (display-mode: fullscreen) and (max-width: 768px),
+       all and (display-mode: minimal-ui) and (max-width: 768px) {
     .bottom-nav {
         display: flex;
     }
