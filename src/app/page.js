@@ -149,7 +149,7 @@ export default function Home() {
       </div>
 
       {/* FOOTER PUSH - To ensure spacing before footer layout */}
-      <div style={{ paddingBottom: "30px" }}></div>
+      <div style={{ paddingBottom: "10px" }}></div>
     </div>
   );
 }

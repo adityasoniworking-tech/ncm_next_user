@@ -45,14 +45,11 @@ body {
     color: var(--text);
     margin: 0;
     width: 100%;
-    min-height: 100vh;
     overflow-x: hidden;
-    display: flex;
-    flex-direction: column;
 }
 
-/* Native App Feel Adjustments ONLY for PWA (Standalone) */
-@media all and (display-mode: standalone), all and (display-mode: fullscreen), all and (display-mode: minimal-ui), all and (display-mode: window-controls-overlay) {
+/* Native App Feel Adjustments ONLY for PWA (Temporarily applied to mobile web for testing) */
+@media all and (max-width: 768px) {
     html {
         overscroll-behavior-y: none;
     }
@@ -65,17 +62,33 @@ body {
         user-select: auto;
     }
     
-    /* Hide the entire footer everywhere except the about page to feel like a native app */
-    .footer-wrapper:not(.about-footer) {
+    /* Hide the main footer content everywhere except the about page */
+    .footer-wrapper:not(.about-footer) .footer-main-container {
+        display: none !important;
+    }
+
+    /* Make the copyright fully compact and blend with the app background */
+    .footer-wrapper:not(.about-footer) #main-footer {
+        background: transparent !important;
+    }
+    
+    .footer-wrapper:not(.about-footer) .copyright {
+        padding: 5px 0 !important;
+        font-size: 0.65rem !important;
+        line-height: 1.2 !important;
+        background: transparent !important;
+        border-top: none !important;
+        color: #999 !important;
+    }
+    
+    .footer-wrapper:not(.about-footer) .mobile-copyright-break {
         display: none !important;
     }
 }
 
-/* Ensure the main content pushes the footer down and the footer doesn't stretch */
+/* Ensure the main content doesn't stretch artificially */
 main {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
+    display: block;
 }
 
 .footer-wrapper {
@@ -137,10 +150,8 @@ main {
     font-weight: bold;
 }
 
-/* Show bottom nav on mobile PWA only */
-@media all and (display-mode: standalone) and (max-width: 768px),
-       all and (display-mode: fullscreen) and (max-width: 768px),
-       all and (display-mode: minimal-ui) and (max-width: 768px) {
+/* Show bottom nav on mobile (temporarily applied to web for testing) */
+@media all and (max-width: 768px) {
     .bottom-nav {
         display: flex;
     }
