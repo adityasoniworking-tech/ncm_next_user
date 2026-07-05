@@ -65,8 +65,8 @@ body {
         user-select: auto;
     }
     
-    /* Hide the main footer content everywhere except the about page */
-    .footer-wrapper:not(.about-footer) .footer-main-container {
+    /* Hide the entire footer everywhere except the about page to feel like a native app */
+    .footer-wrapper:not(.about-footer) {
         display: none !important;
     }
 }
