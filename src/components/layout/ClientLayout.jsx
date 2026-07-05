@@ -12,6 +12,7 @@ import SuccessModal from '../common/SuccessModal';
 import LogoutModal from '../common/LogoutModal';
 import PWAUpdater from '../common/PWAUpdater';
 import InstallAppFAB from '../common/InstallAppFAB';
+import BottomNav from './BottomNav';
 import { useCart } from '../../context/CartContext';
 import { ShoppingCartIcon } from '@heroicons/react/24/solid';
 // Note: PWA Updater and Install Prompt might need specific Next.js implementation
@@ -73,7 +74,15 @@ export default function ClientLayout({ children }) {
 
             <main>{children}</main>
 
-            <Footer />
+            <div className={pathname === '/about' ? 'footer-wrapper about-footer' : 'footer-wrapper'}>
+                <Footer />
+            </div>
+
+            <BottomNav 
+                user={user} 
+                setIsAuthModalOpen={setIsAuthModalOpen} 
+                setIsCartModalOpen={setIsCartModalOpen} 
+            />
 
             <AuthModal
                 isOpen={isAuthModalOpen}
