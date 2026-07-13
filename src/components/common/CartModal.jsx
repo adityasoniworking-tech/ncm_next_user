@@ -537,7 +537,7 @@ const CartModal = ({ isOpen, onClose }) => {
                         style={{ marginTop: '4px', marginRight: '10px', accentColor: '#6b0f1a' }}
                     />
                     <span style={{ fontSize: '0.85rem', color: '#6b0f1a', fontWeight: '600', lineHeight: '1.4' }}>
-                        By placing this order, I acknowledge that the order cannot be cancelled after confirmation
+                        By placing this order, I acknowledge that the order cannot be cancelled after confirmation, and I agree to the <a href="/privacy" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ textDecoration: 'underline' }}>Privacy Policy & Terms</a>.
                     </span>
                 </label>
 
