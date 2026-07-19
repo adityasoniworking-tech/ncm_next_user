@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db, auth } from '../services/firebase';
-import { collection, addDoc, serverTimestamp, doc, onSnapshot, updateDoc, setDoc, increment } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, onSnapshot, updateDoc, setDoc, increment, query } from 'firebase/firestore';
 
 const CartContext = createContext();
 
@@ -12,6 +12,7 @@ export const CartProvider = ({ children }) => {
     // cartItems will be an array of objects: { id, name, price, qty, image? }
     const [cartItems, setCartItems] = useState([]);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [categories, setCategories] = useState([]);
 
     useEffect(() => {
         const localData = localStorage.getItem('user_cart');
@@ -41,24 +42,40 @@ export const CartProvider = ({ children }) => {
 
     useEffect(() => {
         const settingsRef = doc(db, 'settings', 'storeConfig');
-        const unsubscribe = onSnapshot(settingsRef, (docSnap) => {
+        const unsubscribeSettings = onSnapshot(settingsRef, (docSnap) => {
             if (docSnap.exists()) {
                 setStoreSettings(docSnap.data());
             }
         });
-        return () => unsubscribe();
+        
+        const q = query(collection(db, 'categories'));
+        const unsubscribeCats = onSnapshot(q, (snapshot) => {
+            const cats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setCategories(cats);
+        });
+        
+        return () => {
+            unsubscribeSettings();
+            unsubscribeCats();
+        };
     }, []);
 
-    // Adds a full item object or updates its quantity
-    const addToCart = (item, quantity = 1) => {
+    const getMinQty = (catSlug) => {
+        const cat = categories.find(c => c.slug === catSlug);
+        return cat?.minQty || storeSettings?.minOrderQuantity || 1;
+    };
+
+    const addToCart = (item, quantity) => {
+        const minQty = getMinQty(item.cat);
+        const qtyToAdd = quantity !== undefined ? quantity : minQty;
         setCartItems(prev => {
             const existing = prev.find(i => i.id === item.id);
             if (existing) {
                 return prev.map(i =>
-                    i.id === item.id ? { ...i, qty: i.qty + quantity } : i
+                    i.id === item.id ? { ...i, qty: i.qty + qtyToAdd } : i
                 );
             }
-            return [...prev, { ...item, qty: quantity }];
+            return [...prev, { ...item, qty: qtyToAdd }];
         });
     };
 
@@ -70,8 +87,9 @@ export const CartProvider = ({ children }) => {
         setCartItems(prev => {
             return prev.map(item => {
                 if (item.id === id) {
+                    const minQty = getMinQty(item.cat);
                     const newQty = item.qty + change;
-                    if (newQty <= 0) return null; // We filter out nulls below
+                    if (newQty < minQty) return null; // We filter out nulls below
                     return { ...item, qty: newQty };
                 }
                 return item;

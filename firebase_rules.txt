@@ -1,0 +1,121 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if the current user is an admin
+    function isAdmin() {
+      return request.auth != null && exists(/databases/$(database)/documents/admin_users/$(request.auth.uid));
+    }
+
+    // 1. Menu & Categories
+    match /menu/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /categories/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /homeCategories/{document=**} {
+      allow read: if true;
+      allow write: if true; // In production, this should ideally be isAdmin() or request.auth != null
+    }
+
+    // 2. Config & Credentials
+    match /config/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // 3. Orders Rules
+    match /orders/{orderId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if true;
+    }
+
+    // 4. User Profiles (Updated to allow Admins to update loyalty points)
+    match /users/{userId} {
+      allow read, write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+    }
+
+    // 5. Testimonials
+    match /testimonials/{testimonialId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // 6. Push Notifications (FCM Tokens)
+    match /fcmTokens/{token} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // 7. Site Settings (Includes loyalty settings)
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if true; 
+    }
+
+    // 8. Loyalty Program Rules (Admin Manual Tracker)
+    match /loyalty_program/{userKey} {
+      allow read: if request.auth != null; 
+      allow write: if request.auth != null;
+    }
+
+    // 8.5 Loyalty Rewards Catalog
+    match /loyalty_rewards/{rewardId} {
+      allow read: if true; 
+      allow write: if request.auth != null; 
+    }
+
+    // 8.6 Loyalty Transactions Ledger
+    match /loyalty_transactions/{transactionId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false; 
+    }
+
+    // 8.7 NEW: Auto-Generated Loyalty Reward Vouchers (From our PWA feature)
+    match /rewards/{rewardId} {
+      // Users can read their own rewards, Admins can read all rewards
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
+      // Admins can create rewards (when order is accepted), Users can update their reward to 'used' at checkout
+      allow write: if request.auth != null;
+    }
+
+    // 9. Admin Portal Users
+    match /admin_users/{userId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // 10. Authorized Admins
+    match /authorized_admins/{email} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // 11. Unauthorized Attempts
+    match /unauthorized_attempts/{attemptId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // 12. Page Configurations (Custom Order config)
+    match /pageConfigs/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // 13. Gallery Images
+    match /gallery/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // 14. Gallery Categories
+    match /galleryCategories/{document=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}

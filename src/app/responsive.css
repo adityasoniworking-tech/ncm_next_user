@@ -450,6 +450,36 @@
         right: -3px !important;
     }
 
+    /* Success Modal Mobile Optimization */
+    .success-modal-content {
+        padding: 25px 20px !important;
+    }
+    
+    .success-title {
+        font-size: 1.8rem !important;
+    }
+
+    .success-subtitle {
+        font-size: 0.85rem !important;
+    }
+    
+    .freshness-box {
+        padding: 10px 12px !important;
+    }
+
+    .freshness-box p {
+        font-size: 0.8rem !important;
+    }
+    
+    .success-buttons {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+    
+    .success-buttons button {
+        padding: 14px 20px !important;
+    }
+
     /* Mobile adjustments for quantity selector */
     .qty-selector-styled {
         padding: 5px !important;
@@ -796,5 +826,31 @@
     .map-container-premium {
         height: 300px !important;
         border-radius: 20px !important;
+    }
+}
+
+/* --- Custom Order Mobile Optimization --- */
+@media (max-width: 768px) {
+    .custom-order-container .hero-section-premium {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+    }
+    
+    .custom-order-container .hero-visual-right {
+        order: 1 !important; /* Move form below the image and features */
+    }
+
+    .features-grid-premium {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    .form-grid-premium {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .custom-order-container .contact-form-premium {
+        padding: 20px !important; /* responsive padding */
     }
 }
