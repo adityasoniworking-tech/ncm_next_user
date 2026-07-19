@@ -25,11 +25,13 @@ export default function ClientLayout({ children }) {
     const router = useRouter();
 
     const [user, setUser] = useState(null);
+    const [authLoading, setAuthLoading] = useState(true);
     const { cartCount } = useCart();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             setUser(currentUser);
+            setAuthLoading(false);
         });
 
         return () => unsubscribe();
@@ -67,9 +69,11 @@ export default function ClientLayout({ children }) {
     return (
         <>
             <Header 
-                user={user} 
+                user={user}
+                authLoading={authLoading}
                 setIsAuthModalOpen={setIsAuthModalOpen} 
-                setIsLogoutModalOpen={setIsLogoutModalOpen} 
+                setIsLogoutModalOpen={setIsLogoutModalOpen}
+                setIsCartModalOpen={setIsCartModalOpen}
             />
 
             <main>{children}</main>
@@ -79,9 +83,11 @@ export default function ClientLayout({ children }) {
             </div>
 
             <BottomNav 
-                user={user} 
+                user={user}
+                authLoading={authLoading}
                 setIsAuthModalOpen={setIsAuthModalOpen} 
                 setIsCartModalOpen={setIsCartModalOpen} 
+                setIsLogoutModalOpen={setIsLogoutModalOpen}
             />
 
             <AuthModal

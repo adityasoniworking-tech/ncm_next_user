@@ -5,14 +5,16 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { db } from '../../services/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import { useCart } from '../../context/CartContext';
 
-const Header = ({ user, setIsAuthModalOpen, setIsLogoutModalOpen }) => {
+const Header = ({ user, authLoading, setIsAuthModalOpen, setIsLogoutModalOpen, setIsCartModalOpen }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [loyaltyData, setLoyaltyData] = useState({ currentCycleOrders: 0, rewardEligibility: false, ordersRequired: 10 });
     const dropdownRef = useRef(null);
     const router = useRouter();
     const pathname = usePathname();
+    const { cartCount } = useCart();
 
     useEffect(() => {
         if (user) {
@@ -104,6 +106,8 @@ const Header = ({ user, setIsAuthModalOpen, setIsLogoutModalOpen }) => {
                     <NavLink to="/" onClick={() => setIsMobileMenuOpen(false)}>Home</NavLink>
                     <NavLink to="/about" onClick={() => setIsMobileMenuOpen(false)}>About Us</NavLink>
                     <NavLink to="/menu" onClick={() => setIsMobileMenuOpen(false)}>Menu</NavLink>
+                    <NavLink to="/gallery" onClick={() => setIsMobileMenuOpen(false)}>Gallery</NavLink>
+                    <NavLink to="/custom-order" onClick={() => setIsMobileMenuOpen(false)}>Custom Order</NavLink>
                     <NavLink to="/contact" onClick={() => setIsMobileMenuOpen(false)}>Contact Us</NavLink>
                     {!user && (
                         <button
@@ -118,8 +122,46 @@ const Header = ({ user, setIsAuthModalOpen, setIsLogoutModalOpen }) => {
             </nav>
 
             <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <div 
+                    className="header-cart"
+                    onClick={() => setIsCartModalOpen(true)}
+                    style={{ position: 'relative', cursor: 'pointer', fontSize: '1.2rem', color: 'var(--primary)', display: 'flex', alignItems: 'center' }}
+                >
+                    <i className="fa-solid fa-cart-shopping"></i>
+                    {cartCount > 0 && (
+                        <span style={{
+                            position: 'absolute',
+                            top: '-8px',
+                            right: '-10px',
+                            background: 'var(--secondary)',
+                            color: 'white',
+                            borderRadius: '50%',
+                            minWidth: '18px',
+                            height: '18px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.7rem',
+                            fontWeight: 'bold',
+                            padding: '0 4px'
+                        }}>
+                            {cartCount}
+                        </span>
+                    )}
+                </div>
+
                 <div id="auth-section" style={{ display: 'flex', alignItems: 'center' }}>
-                    {user ? (
+                    {authLoading ? (
+                        /* Skeleton loader while auth state loads */
+                        <div style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '50%',
+                            background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+                            backgroundSize: '200% 100%',
+                            animation: 'shimmer 1.5s infinite',
+                        }} />
+                    ) : user ? (
                         <div className="avatar-dropdown-container" ref={dropdownRef} style={{ position: 'relative' }}>
                             <div
                                 className="user-avatar"
@@ -172,12 +214,36 @@ const Header = ({ user, setIsAuthModalOpen, setIsLogoutModalOpen }) => {
                             )}
                         </div>
                     ) : (
-                        <button
-                            onClick={() => setIsAuthModalOpen(true)}
-                            className="contact-btn hide-on-mobile"
-                        >
-                            Login
-                        </button>
+                        <>
+                            {/* Desktop: full login button */}
+                            <button
+                                onClick={() => setIsAuthModalOpen(true)}
+                                className="contact-btn hide-on-mobile"
+                            >
+                                Login
+                            </button>
+                            {/* Mobile: just a person icon */}
+                            <button
+                                onClick={() => setIsAuthModalOpen(true)}
+                                className="hide-on-desktop"
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    width: '40px',
+                                    height: '40px',
+                                    borderRadius: '50%',
+                                    background: '#fff0f0',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: 'var(--primary)',
+                                    fontSize: '1.3rem',
+                                }}
+                            >
+                                <i className="fa-regular fa-user"></i>
+                            </button>
+                        </>
                     )}
                 </div>
 

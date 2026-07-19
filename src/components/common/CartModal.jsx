@@ -74,6 +74,7 @@ const CartModal = ({ isOpen, onClose }) => {
 
     const [availableReward, setAvailableReward] = useState(null);
     const [applyReward, setApplyReward] = useState(false);
+    const [isProfileIncomplete, setIsProfileIncomplete] = useState(false);
 
     // Fetch saved profile details when moving to checkout
     useEffect(() => {
@@ -88,8 +89,12 @@ const CartModal = ({ isOpen, onClose }) => {
                     if (docSnap.exists()) {
                         const data = docSnap.data();
                         setSavedProfile(data);
-                        if (data.shippingName || data.name) setCustName(data.shippingName || data.name);
-                        if (data.phone) setCustPhone(data.phone);
+                        
+                        const hasName = data.displayName || data.shippingName || data.name;
+                        const hasPhone = data.phone;
+                        
+                        if (hasName) setCustName(hasName);
+                        if (hasPhone) setCustPhone(hasPhone);
                         if (data.street) setStreet(data.street);
                         if (data.city) setCity(data.city);
                         if (data.taluka) setTaluka(data.taluka);
@@ -103,6 +108,10 @@ const CartModal = ({ isOpen, onClose }) => {
                         } else {
                             setAddressMode('manual');
                         }
+                        
+                        setIsProfileIncomplete(!hasName || !hasPhone);
+                    } else {
+                        setIsProfileIncomplete(true);
                     }
 
                     // Fetch pending reward
